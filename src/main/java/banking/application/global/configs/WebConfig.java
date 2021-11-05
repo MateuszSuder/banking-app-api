@@ -1,4 +1,4 @@
-package banking.application;
+package banking.application.global.configs;
 
 import banking.application.global.utils.AuthInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,6 +6,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Configuration for Spring MVC
+ * Contains interceptors for requests
+ */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     @Autowired
