@@ -1,7 +1,7 @@
-package banking.application.routes;
+package banking.application.routes.Health;
 
 import banking.application.Application;
-import banking.application.global.interfaces.Auth;
+
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,8 +11,7 @@ import java.time.LocalDateTime;
 
 @SpringBootApplication
 @RequestMapping("/")
-public class health extends Application {
-
+public class HealthController extends Application {
     /**
      * Return current time to show if service is alive.
      * @return Current time.
@@ -20,7 +19,6 @@ public class health extends Application {
     @GetMapping("health")
     public ResponseEntity<LocalDateTime> getHealth() {
         LocalDateTime localDate = LocalDateTime.now();
-
         return ResponseEntity.ok(localDate);
     }
 }
