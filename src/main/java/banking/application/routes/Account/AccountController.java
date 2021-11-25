@@ -41,7 +41,15 @@ public class AccountController extends Application {
     public ResponseEntity GetAuthAccount() {
         try {
             // Get account by Auth0 id
-            Account a = this.accountService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
+            String id = this.currentUser.getCurrentUser().getUser_id();
+            Account a = this.accountService.getAuthAccount(id);
+            IBAN iban = new IBAN(AccountType.standard, id);
+            IBAN iban2 = new IBAN(AccountType.multi, id);
+            IBAN iban3 = new IBAN(AccountType.crypto, id);
+
+            System.out.println(iban);
+            System.out.println(iban2);
+            System.out.println(iban3);
             return ResponseEntity.status(HttpStatus.OK).body(a);
         } catch (UnirestException | JsonProcessingException e) {
             e.printStackTrace();
