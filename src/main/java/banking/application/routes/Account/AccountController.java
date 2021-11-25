@@ -47,9 +47,6 @@ public class AccountController extends Application {
             IBAN iban2 = new IBAN(AccountType.multi, id);
             IBAN iban3 = new IBAN(AccountType.crypto, id);
 
-            System.out.println(iban);
-            System.out.println(iban2);
-            System.out.println(iban3);
             return ResponseEntity.status(HttpStatus.OK).body(a);
         } catch (UnirestException | JsonProcessingException e) {
             e.printStackTrace();
