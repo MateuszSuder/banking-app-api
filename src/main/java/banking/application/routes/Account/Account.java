@@ -31,12 +31,6 @@ public class Account {
     public String family_name; // Surname
 }
 
-class Metadata {
-    public String standard;
-    public String multi;
-    public String crypto;
-}
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Identity {
     public String connection;

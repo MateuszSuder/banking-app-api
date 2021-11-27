@@ -1,5 +1,8 @@
 package banking.application.routes.Account;
 
+/**
+ * Enum containing account types with get value method returning numeric value
+ */
 public enum AccountType {
     standard(1),
     multi(2),

@@ -1,6 +1,7 @@
 package banking.application.routes.Account;
 
 import banking.application.Application;
+import banking.application.global.classes.ThrowableErrorResponse;
 import banking.application.global.classes.ErrorResponse;
 import banking.application.global.interfaces.Auth;
 import banking.application.global.utils.Auth.CurrentUser;
@@ -32,21 +33,83 @@ public class AccountController extends Application {
         this.currentUser = currentUser;
     }
 
-    // Path variable or multiple endpoints?
+    /**
+     * Open account for JWT's owner. Disallows creating same type accounts.
+     * @param accountType which account to open
+     * @return Account's iban or error
+     */
     @Auth
     @PostMapping("open/{accountType}")
     public ResponseEntity OpenAccount(@PathVariable AccountType accountType) {
+        // Reusable object
+        ResponseEntity alreadyOpened = ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(
+                        "Conflict",
+                        "User has already " + accountType + " account open",
+                        409));
+        // Check if account already exists in user's JWT
         if(this.currentUser.getCurrentUser().getUserAccounts().isOpen(accountType)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ErrorResponse(
-                            "Conflict",
-                            "User has already " + accountType + " account open",
-                            409));
+            return alreadyOpened;
         }
+
+        try {
+            // Double check if user already has account in Auth0 profile
+            Account account = this.accountService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
+
+            // Check if iban already exists
+            switch(accountType) {
+                case standard:
+                    if(account.app_metadata.standard != null) {
+                        return alreadyOpened;
+                    }
+                    break;
+                case multi:
+                    if(account.app_metadata.multi != null) {
+                        return alreadyOpened;
+                    }
+                    break;
+                case crypto:
+                    if(account.app_metadata.crypto != null) {
+                        return alreadyOpened;
+                    }
+                    break;
+                default:
+                   return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Bad Request", "Invalid account type", 400));
+            }
+        } catch (JsonProcessingException | UnirestException  e) {
+            e.printStackTrace();
+            // Return error if error
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        }
+
+        /**
+         * Why do we check 2 times?
+         * In case of not refreshing JWT (not going through auth after creating account), we need to
+         * check profile, because JWT may have old data
+         */
+
+        // Open account, return iban
         IBAN iban = this.accountService.openAccount(this.currentUser.getCurrentUser().getUser_id(), accountType);
+
+        try {
+            // Link account to Auth0 user's profile
+            this.accountService.linkAccountToUser(this.currentUser.getCurrentUser().getUser_id(), accountType, iban);
+        } catch (UnirestException | JsonProcessingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        } catch (ThrowableErrorResponse e) {
+            return ResponseEntity.status(e.code).body(e.getErrorResponse());
+        }
+
+        // Return iban if created
         return ResponseEntity.status(HttpStatus.CREATED).body(iban.getIBAN());
     }
 
+    /**
+     * Get user Auth0 account
+     * @return user's Auth0 profile
+     */
     @Auth
     @GetMapping("")
     public ResponseEntity GetAuthAccount() {

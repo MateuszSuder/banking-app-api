@@ -5,7 +5,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
-@Document("bankaccounts")
+/**
+ * Document for bank accounts
+ */
+@Document("bankAccounts")
 public class BankAccount {
 
     @Id
