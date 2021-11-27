@@ -1,12 +1,18 @@
 package banking.application.routes.Account;
 
+import banking.application.global.classes.ThrowableErrorResponse;
+import banking.application.routes.Account.BankAccount.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.github.cdimascio.dotenv.Dotenv;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Service for handling Auth0 account data
@@ -17,6 +23,18 @@ public class AccountService implements IAccountService {
     private static final Dotenv dotenv = Dotenv.load();
     // Token for accessing Auth0 API
     private Token APIToken = null;
+    // Mongo repository
+    @Autowired
+    BankAccountRepository bankAccountRepository;
+
+    // Method for easy getting Auth0 API user endpoint
+    public String getUserEndpoint(String userID) {
+        // Format path
+        return String.format(
+                "%1$susers/%2$s",
+                dotenv.get("APP_AUTH_API"),
+                userID);
+    }
 
     /**
      * Method used to fetch token or return valid, existing one
@@ -24,6 +42,7 @@ public class AccountService implements IAccountService {
      * @throws UnirestException Request error
      * @throws JsonProcessingException JSON parsing error
      */
+    @Override
     public Token getAPIToken() throws UnirestException, JsonProcessingException {
         // Get system time
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
@@ -56,19 +75,14 @@ public class AccountService implements IAccountService {
      * @throws UnirestException Request error
      * @throws JsonProcessingException JSON parsing error
      */
+    @Override
     public Account getAuthAccount(String userID) throws UnirestException, JsonProcessingException {
         // Get API token
         Token token = getAPIToken();
 
-        // Format path
-        String user = String.format(
-                "%1$susers/%2$s",
-                dotenv.get("APP_AUTH_API"),
-                userID);
-
         // Fetch account
         String response = Unirest
-                .get(user)
+                .get(getUserEndpoint(userID))
                 .header(
                         "Authorization", String.format("%1$s %2$s", token.token_type, token.access_token))
                 .asString()
@@ -77,4 +91,72 @@ public class AccountService implements IAccountService {
         // Map and return user's account
         return objectMapper.readValue(response, Account.class);
     }
+
+    /**
+     * Method creating user account, generating codes and saving it to database
+     * @param userID Auth0 user's id
+     * @param ac Account type to create
+     * @return iban
+     */
+    @Override
+    public IBAN openAccount(String userID, AccountType ac) {
+        // Create iban
+        IBAN iban = new IBAN(ac, userID);
+        // Generate codes
+        ArrayList<Code> codes = Code.generateCodes();
+
+        // Create account and assign iban and codes to it. Users will get 10000zł for testing purposes
+        BankAccount account = new BankAccount(iban.getIBAN(), List.of(new Currency("PLN", 10000F)), codes);
+
+        // Save account to database
+        this.bankAccountRepository.save(account);
+
+        return iban;
+    }
+
+    /**
+     * Method saving account data to user's Auth0 profile
+     * @param userID Auth0 user id
+     * @param ac Account type to be linked
+     * @param iban Iban of the account
+     * @throws UnirestException when request error occurs
+     * @throws JsonProcessingException when json parsing error occurs
+     * @throws ThrowableErrorResponse for internal/custom errors
+     */
+    @Override
+    public void linkAccountToUser(String userID, AccountType ac, IBAN iban) throws UnirestException, JsonProcessingException, ThrowableErrorResponse {
+        // Get API token
+        Token token = getAPIToken();
+
+        // Create JSON objects to send
+        JSONObject account = new JSONObject();
+        JSONObject metadata = new JSONObject();
+        account.put("app_metadata", metadata);
+
+        // Put iban to right field
+        switch(ac) {
+            case standard:
+                metadata.put("standard", iban.getIBAN());
+                break;
+            case multi:
+                metadata.put("multi", iban.getIBAN());
+                break;
+            case crypto:
+                metadata.put("crypto", iban.getIBAN());
+                break;
+            default:
+                throw new ThrowableErrorResponse("Internal error", "Invalid account type", 500);
+        }
+
+        // Save data to profile
+        String response = Unirest
+                .patch(getUserEndpoint(userID))
+                .header("Authorization", String.format("%1$s %2$s", token.token_type, token.access_token))
+                .header("Content-Type", "application/json")
+                .body(account)
+                .asString()
+                .getBody();
+    }
 }
+
+

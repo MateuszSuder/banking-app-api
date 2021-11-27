@@ -1,6 +1,9 @@
 package banking.application.global.utils.Auth;
 
+import banking.application.routes.Account.AccountType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.lang.reflect.Field;
 
 /**
  * UserAccounts POJO class
@@ -33,6 +36,15 @@ public class UserAccounts {
 
     public void setCrypto(String crypto) {
         this.crypto = crypto;
+    }
+
+    public Boolean isOpen(AccountType accountType) {
+        try {
+            Field field = UserAccounts.class.getDeclaredField(String.valueOf(accountType));
+            return field.get(this) != null;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return false;
+        }
     }
 
     @Override

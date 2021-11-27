@@ -27,14 +27,8 @@ public class Account {
     public String last_login;
     public long logins_count;
     public boolean blocked;
-    public String given_name;
-    public String family_name;
-}
-
-class Metadata {
-    public String standard;
-    public String multi;
-    public String crypto;
+    public String given_name; // First name
+    public String family_name; // Surname
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
