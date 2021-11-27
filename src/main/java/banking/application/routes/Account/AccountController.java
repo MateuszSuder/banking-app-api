@@ -4,14 +4,14 @@ import banking.application.Application;
 import banking.application.global.classes.ErrorResponse;
 import banking.application.global.interfaces.Auth;
 import banking.application.global.utils.Auth.CurrentUser;
+import banking.application.routes.Account.BankAccount.IBAN;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller handling Auth0 account data
@@ -32,10 +32,21 @@ public class AccountController extends Application {
         this.currentUser = currentUser;
     }
 
-    /**
-     * Get endpoint returning user Auth0 account derived from JWT
-     * @return User Auth0 account
-     */
+    // Path variable or multiple endpoints?
+    @Auth
+    @PostMapping("open/{accountType}")
+    public ResponseEntity OpenAccount(@PathVariable AccountType accountType) {
+        if(this.currentUser.getCurrentUser().getUserAccounts().isOpen(accountType)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse(
+                            "Conflict",
+                            "User has already " + accountType + " account open",
+                            409));
+        }
+        IBAN iban = this.accountService.openAccount(this.currentUser.getCurrentUser().getUser_id(), accountType);
+        return ResponseEntity.status(HttpStatus.CREATED).body(iban.getIBAN());
+    }
+
     @Auth
     @GetMapping("")
     public ResponseEntity GetAuthAccount() {

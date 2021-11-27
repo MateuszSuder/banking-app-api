@@ -1,7 +1,8 @@
-package banking.application.routes.Account;
+package banking.application.routes.Account.BankAccount;
 
 
-import java.util.Arrays;
+import banking.application.routes.Account.AccountType;
+
 import java.util.Random;
 import java.util.function.Function;
 
@@ -10,7 +11,7 @@ public class IBAN {
     private int[] bankCode = new int[8];
     private int[] accountNumber = new int[16];
 
-    IBAN(AccountType at, String userID) {
+    public IBAN(AccountType at, String userID) {
         String bankCodeBase = "MS0DP0MW";
         Integer sum = 0;
         char[] charArray = bankCodeBase.toCharArray();
@@ -81,5 +82,19 @@ public class IBAN {
 
         res.append(prettyIBAN.apply(new int[][]{bankCode, accountNumber}));
         return res.toString();
+    }
+
+    public String getIBAN() {
+        StringBuilder iban = new StringBuilder();
+
+        int[][] parts = {this.checksum, this.bankCode, this.accountNumber};
+
+        for(int[] part : parts) {
+            for(int digit: part) {
+                iban.append(digit);
+            }
+        }
+
+        return iban.toString();
     }
 }

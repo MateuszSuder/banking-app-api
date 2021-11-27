@@ -1,12 +1,16 @@
 package banking.application.routes.Account;
 
+import banking.application.routes.Account.BankAccount.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Service for handling Auth0 account data
@@ -17,6 +21,8 @@ public class AccountService implements IAccountService {
     private static final Dotenv dotenv = Dotenv.load();
     // Token for accessing Auth0 API
     private Token APIToken = null;
+    @Autowired
+    BankAccountRepository bankAccountRepository;
 
     /**
      * Method used to fetch token or return valid, existing one
@@ -24,6 +30,7 @@ public class AccountService implements IAccountService {
      * @throws UnirestException Request error
      * @throws JsonProcessingException JSON parsing error
      */
+    @Override
     public Token getAPIToken() throws UnirestException, JsonProcessingException {
         // Get system time
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
@@ -56,6 +63,7 @@ public class AccountService implements IAccountService {
      * @throws UnirestException Request error
      * @throws JsonProcessingException JSON parsing error
      */
+    @Override
     public Account getAuthAccount(String userID) throws UnirestException, JsonProcessingException {
         // Get API token
         Token token = getAPIToken();
@@ -76,5 +84,22 @@ public class AccountService implements IAccountService {
 
         // Map and return user's account
         return objectMapper.readValue(response, Account.class);
+    }
+
+    @Override
+    public IBAN openAccount(String userID, AccountType ac) {
+        IBAN iban = new IBAN(ac, userID);
+        ArrayList<Code> codes = Code.generateCodes();
+
+        BankAccount account = new BankAccount(iban.getIBAN(), Arrays.asList(new Currency("PLN", 10000F)), codes);
+
+        this.bankAccountRepository.save(account);
+
+        return iban;
+    }
+
+    @Override
+    public void linkAccountToUser(String userID, AccountType ac, IBAN iban) {
+
     }
 }
