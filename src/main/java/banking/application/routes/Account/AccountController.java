@@ -5,6 +5,7 @@ import banking.application.global.classes.ThrowableErrorResponse;
 import banking.application.global.classes.ErrorResponse;
 import banking.application.global.interfaces.Auth;
 import banking.application.global.utils.Auth.CurrentUser;
+import banking.application.global.utils.Mailer.MailerService;
 import banking.application.routes.Account.BankAccount.IBAN;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -57,24 +58,26 @@ public class AccountController extends Application {
             Account account = this.accountService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
 
             // Check if iban already exists
-            switch(accountType) {
-                case standard:
-                    if(account.app_metadata.standard != null) {
-                        return alreadyOpened;
-                    }
-                    break;
-                case multi:
-                    if(account.app_metadata.multi != null) {
-                        return alreadyOpened;
-                    }
-                    break;
-                case crypto:
-                    if(account.app_metadata.crypto != null) {
-                        return alreadyOpened;
-                    }
-                    break;
-                default:
-                   return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Bad Request", "Invalid account type", 400));
+            if(account.app_metadata != null) {
+                switch(accountType) {
+                    case standard:
+                        if(account.app_metadata.standard != null) {
+                            return alreadyOpened;
+                        }
+                        break;
+                    case multi:
+                        if(account.app_metadata.multi != null) {
+                            return alreadyOpened;
+                        }
+                        break;
+                    case crypto:
+                        if(account.app_metadata.crypto != null) {
+                            return alreadyOpened;
+                        }
+                        break;
+                    default:
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Bad Request", "Invalid account type", 400));
+                }
             }
         } catch (JsonProcessingException | UnirestException  e) {
             e.printStackTrace();
@@ -91,7 +94,7 @@ public class AccountController extends Application {
          */
 
         // Open account, return iban
-        IBAN iban = this.accountService.openAccount(this.currentUser.getCurrentUser().getUser_id(), accountType);
+        IBAN iban = this.accountService.openAccount(this.currentUser.getCurrentUser(), accountType);
 
         try {
             // Link account to Auth0 user's profile

@@ -6,6 +6,7 @@ import com.auth0.jwk.*;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -155,6 +156,10 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         } catch (JWTDecodeException | JwkException e) {
             HandleHTTPError(response, "Invalid token");
+            e.printStackTrace();
+            return false;
+        } catch (TokenExpiredException e){
+            HandleHTTPError(response, "Token expired");
             e.printStackTrace();
             return false;
         } catch (JsonProcessingException e) {

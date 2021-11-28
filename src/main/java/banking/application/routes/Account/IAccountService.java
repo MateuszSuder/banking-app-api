@@ -1,6 +1,7 @@
 package banking.application.routes.Account;
 
 import banking.application.global.classes.ThrowableErrorResponse;
+import banking.application.global.utils.Auth.User;
 import banking.application.routes.Account.BankAccount.IBAN;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +16,6 @@ public interface IAccountService {
 
     Token getAPIToken() throws UnirestException, JsonProcessingException;
     Account getAuthAccount(String userID) throws UnirestException, JsonProcessingException;
-    IBAN openAccount(String userID, AccountType ac);
+    IBAN openAccount(User user, AccountType ac);
     void linkAccountToUser(String userID, AccountType ac, IBAN iban) throws UnirestException, JsonProcessingException, ThrowableErrorResponse;
 }

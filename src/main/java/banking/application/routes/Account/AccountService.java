@@ -1,6 +1,8 @@
 package banking.application.routes.Account;
 
 import banking.application.global.classes.ThrowableErrorResponse;
+import banking.application.global.utils.Auth.User;
+import banking.application.global.utils.Mailer.MailerService;
 import banking.application.routes.Account.BankAccount.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.Unirest;
@@ -26,6 +28,8 @@ public class AccountService implements IAccountService {
     // Mongo repository
     @Autowired
     BankAccountRepository bankAccountRepository;
+    @Autowired
+    MailerService mailerService;
 
     // Method for easy getting Auth0 API user endpoint
     public String getUserEndpoint(String userID) {
@@ -94,14 +98,14 @@ public class AccountService implements IAccountService {
 
     /**
      * Method creating user account, generating codes and saving it to database
-     * @param userID Auth0 user's id
+     * @param user Auth0 user
      * @param ac Account type to create
      * @return iban
      */
     @Override
-    public IBAN openAccount(String userID, AccountType ac) {
+    public IBAN openAccount(User user, AccountType ac) {
         // Create iban
-        IBAN iban = new IBAN(ac, userID);
+        IBAN iban = new IBAN(ac, user.getUser_id());
         // Generate codes
         ArrayList<Code> codes = Code.generateCodes();
 
@@ -110,6 +114,13 @@ public class AccountService implements IAccountService {
 
         // Save account to database
         this.bankAccountRepository.save(account);
+
+        // Prepare message to send
+        StringBuilder message = new StringBuilder("Kody potwierdzające transakcje dla konta: " + iban);
+        for (Code c : codes) {
+            message.append("\n").append(c.getId()).append(": ").append(c.getCode());
+        }
+        this.mailerService.sendMessage(user.getEmail(), "Kody potwierdzające", message.toString());
 
         return iban;
     }
@@ -149,13 +160,13 @@ public class AccountService implements IAccountService {
         }
 
         // Save data to profile
-        String response = Unirest
-                .patch(getUserEndpoint(userID))
-                .header("Authorization", String.format("%1$s %2$s", token.token_type, token.access_token))
-                .header("Content-Type", "application/json")
-                .body(account)
-                .asString()
-                .getBody();
+        Unirest
+            .patch(getUserEndpoint(userID))
+            .header("Authorization", String.format("%1$s %2$s", token.token_type, token.access_token))
+            .header("Content-Type", "application/json")
+            .body(account)
+            .asString()
+            .getBody();
     }
 }
 
