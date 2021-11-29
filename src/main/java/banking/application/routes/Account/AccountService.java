@@ -2,7 +2,6 @@ package banking.application.routes.Account;
 
 import banking.application.global.classes.ThrowableErrorResponse;
 import banking.application.global.utils.Auth.User;
-import banking.application.global.utils.Mailer.MailerService;
 import banking.application.routes.Account.BankAccount.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.Unirest;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,8 +26,6 @@ public class AccountService implements IAccountService {
     // Mongo repository
     @Autowired
     BankAccountRepository bankAccountRepository;
-    @Autowired
-    MailerService mailerService;
 
     // Method for easy getting Auth0 API user endpoint
     public String getUserEndpoint(String userID) {
@@ -103,24 +99,15 @@ public class AccountService implements IAccountService {
      * @return iban
      */
     @Override
-    public IBAN openAccount(User user, AccountType ac) {
+    public IBAN openAccount(User user, AccountType ac, List<Code> codes) {
         // Create iban
         IBAN iban = new IBAN(ac, user.getUser_id());
-        // Generate codes
-        ArrayList<Code> codes = Code.generateCodes();
 
         // Create account and assign iban and codes to it. Users will get 10000zł for testing purposes
         BankAccount account = new BankAccount(iban.getIBAN(), List.of(new Currency("PLN", 10000F)), codes);
 
         // Save account to database
         this.bankAccountRepository.save(account);
-
-        // Prepare message to send
-        StringBuilder message = new StringBuilder("Kody potwierdzające transakcje dla konta: " + iban);
-        for (Code c : codes) {
-            message.append("\n").append(c.getId()).append(": ").append(c.getCode());
-        }
-        this.mailerService.sendMessage(user.getEmail(), "Kody potwierdzające", message.toString());
 
         return iban;
     }
@@ -167,6 +154,51 @@ public class AccountService implements IAccountService {
             .body(account)
             .asString()
             .getBody();
+    }
+
+    /**
+     * Get codes for account which id account is given in argument
+     * @param iban iban of account
+     * @return list of codes
+     */
+    @Override
+    public List<Code> getUserCodes(String iban) {
+        return this.bankAccountRepository.findItemById(iban).getCodes();
+    }
+
+    /**
+     * Method to get iban for certain account type
+     * @param account user's account
+     * @param accountType type of account
+     * @return iban of found account or null if not found
+     * @throws ThrowableErrorResponse for invalid account type
+     */
+    @Override
+    public String getUserAccountIBAN(Account account, AccountType accountType) throws ThrowableErrorResponse {
+        // Check if iban already exists
+        if(account.app_metadata != null) {
+            switch(accountType) {
+                case standard:
+                    if(account.app_metadata.standard != null) {
+                        return account.app_metadata.standard;
+                    }
+                    break;
+                case multi:
+                    if(account.app_metadata.multi != null) {
+                        return account.app_metadata.multi;
+                    }
+                    break;
+                case crypto:
+                    if(account.app_metadata.crypto != null) {
+                        return account.app_metadata.crypto;
+                    }
+                    break;
+                default:
+                    throw new ThrowableErrorResponse("Bad Request", "Invalid account type", 400);
+            }
+        }
+
+        return null;
     }
 }
 

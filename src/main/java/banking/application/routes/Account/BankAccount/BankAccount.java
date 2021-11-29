@@ -23,6 +23,10 @@ public class BankAccount {
         this.codes = codes;
     }
 
+    public List<Code> getCodes() {
+        return codes;
+    }
+
     @Override
     public String toString() {
         return "BankAccount{" +
