@@ -23,6 +23,14 @@ public class Code {
         this.code = code;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
     /**
      * Generate single code
      * @param id id of result code
