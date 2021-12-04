@@ -2,6 +2,7 @@ package banking.application.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 
@@ -16,6 +17,19 @@ public class BankAccount {
 
     private List<Currency> currencies;
     private List<Code> codes;
+
+    @Nullable
+    private List<Loan> loans;
+
+    @Nullable
+    private List<StandingOrder> standingOrders;
+
+    @Nullable
+    private List<SavedRecipients> savedRecipients;
+
+    @Nullable // Nullable for every but crypto account
+    private CryptoAccountInfo cryptoAccountInfo;
+
 
     public BankAccount(String id, List<Currency> currencies, List<Code> codes) {
         this.id = id;
