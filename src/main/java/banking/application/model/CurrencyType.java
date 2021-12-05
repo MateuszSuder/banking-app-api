@@ -1,6 +1,6 @@
 package banking.application.model;
 
-public enum AccountType {
+public enum CurrencyType {
     fiat,
     crypto
 }

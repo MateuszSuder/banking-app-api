@@ -6,7 +6,7 @@ import java.util.List;
 
 @Document("exchangeRates")
 public class ExchangeRate {
-    private AccountType type;
+    private CurrencyType type;
     private List<Rate> rates;
     private String defaultCurrency;
 }
