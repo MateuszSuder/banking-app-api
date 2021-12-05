@@ -1,6 +1,6 @@
 package banking.application.model;
 
-public class SavedRecipients {
+public class Recipient {
     String accountNumber; // IBAN
     String recipientName;
 }
