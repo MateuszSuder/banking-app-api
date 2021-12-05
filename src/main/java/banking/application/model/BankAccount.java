@@ -25,7 +25,7 @@ public class BankAccount {
     private List<StandingOrder> standingOrders;
 
     @Nullable
-    private List<SavedRecipients> savedRecipients;
+    private List<Recipient> savedRecipients;
 
     @Nullable // Nullable for every but crypto account
     private CryptoAccountInfo cryptoAccountInfo;
