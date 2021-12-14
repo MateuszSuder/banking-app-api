@@ -97,18 +97,18 @@ public class AccountService implements IAccountService {
     }
 
     /**
-     * Method creating user account, generating codes and saving it to database
+     * Method creating user account
      * @param user Auth0 user
      * @param ac Account type to create
      * @return iban
      */
     @Override
-    public IBAN openAccount(User user, AccountType ac, List<Code> codes) {
+    public IBAN openAccount(User user, AccountType ac) {
         // Create iban
         IBAN iban = new IBAN(ac, user.getUser_id());
 
         // Create account and assign iban and codes to it. Users will get 10000zł for testing purposes
-        BankAccount account = new BankAccount(iban.getIBAN(), List.of(new Currency("PLN", 10000F)), codes);
+        BankAccount account = new BankAccount(iban.getIBAN(), List.of(new Currency("PLN", 10000F)));
 
         // Save account to database
         this.bankAccountRepository.save(account);
@@ -158,16 +158,6 @@ public class AccountService implements IAccountService {
             .body(account)
             .asString()
             .getBody();
-    }
-
-    /**
-     * Get codes for account which id account is given in argument
-     * @param iban iban of account
-     * @return list of codes
-     */
-    @Override
-    public List<Code> getUserCodes(String iban) {
-        return this.bankAccountRepository.findItemById(iban).getCodes();
     }
 
     /**

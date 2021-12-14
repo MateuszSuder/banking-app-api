@@ -2,6 +2,9 @@ package banking.application.model;
 
 import org.springframework.data.mongodb.core.mapping.Document;
 
+/**
+ * Document for transactions collection
+ */
 @Document("transactions")
 public class Transaction {
     private String from;

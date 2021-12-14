@@ -1,85 +1,53 @@
 package banking.application.model;
 
-import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Random;
 
 /**
- * Class generating 8-digits authorization codes
+ * Document for authorization codes
  */
+@Document("codes")
 public class Code {
-    @Id
-    int id;
 
-    String code;
+    @Indexed
+    int code;
 
-    public Code() {
-    }
+    @Indexed
+    @Field("bindTo")
+    String userID;
 
-    // Constructor for filling fields
-    public Code(int id, String code) {
-        this.id = id;
+    @Indexed(expireAfterSeconds = 600)
+    LocalDateTime timeGenerated;
+
+    public Code(){}
+
+    public Code(String userID, int code, LocalDateTime timeGenerated) {
+        this.userID = userID;
         this.code = code;
+        this.timeGenerated = timeGenerated;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    /**
-     * Generate single code
-     * @param id id of result code
-     * @return single 8-digit code
-     */
-    public static Code generateSingleCode(int id) {
+    public Code(String userID) {
         Random random = new Random();
+        this.code = 100000 + random.nextInt(900000);
 
-        // Get 8-digits int (10000000 - 99999999)
-        int code = (10000000 + random.nextInt(90000000));
+        this.timeGenerated = LocalDateTime.now(ZoneOffset.UTC);
 
-        // Return new Code object with generated code
-        return new Code(id, Integer.toString(code));
+        this.userID = userID;
     }
 
-    // Standard method for codes generation, generates 8 codes
-    public static ArrayList<Code>generateCodes() {
-        return Code.generateXCodes(8, 1);
-    }
-
-    /**
-     * Override standard method, pass quantity and start with index 1
-     * @param quantity number of codes
-     * @return Array with generated codes
-     */
-    public static ArrayList<Code> generateXCodes(int quantity) {
-        return Code.generateXCodes(quantity, 1);
-    }
-
-    /**
-     * Generate codes with given quantity
-     * @param quantity number of codes
-     * @param startingIndex index with which to start
-     * @return Generated codes
-     */
-    public static ArrayList<Code> generateXCodes(int quantity, int startingIndex) {
-        ArrayList<Code> codes = new ArrayList<Code>();
-        for (int i = startingIndex; i < startingIndex + quantity; i++) {
-            codes.add(Code.generateSingleCode(i));
-        }
-
-        return codes;
+    public String getUserID() {
+        return userID;
     }
 
     @Override
     public String toString() {
-        return "Code{" +
-                "id=" + id +
-                ", code='" + code + '\'' +
-                '}';
+        return "Kod potwierdzający dla użytkownika o identyfikatorze " + this.userID +
+                ": " + this.code + ". Kod utworzony jest ważny 5 minut.";
     }
 }

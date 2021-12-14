@@ -1,5 +1,8 @@
 package banking.application.model;
 
+/**
+ * POJO class for information about crypto account
+ */
 public class CryptoAccountInfo {
     private int accountLevel;
     private float levelProgress;

@@ -1,5 +1,6 @@
 package banking.application.interceptor;
 
+import banking.application.model.Code;
 import banking.application.util.ErrorResponse;
 import banking.application.annotation.Auth;
 import banking.application.model.User;
@@ -19,6 +20,9 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -46,6 +50,10 @@ public class AuthInterceptor implements HandlerInterceptor {
     @Autowired
     CurrentUser currentUser;
 
+    // Template for mongo operations
+    @Autowired
+    MongoTemplate mongoTemplate;
+
     // Autowired constructor
     @Autowired
     AuthInterceptor(CurrentUser currentUser) {
@@ -60,6 +68,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     private void HandleHTTPError(HttpServletResponse r, String messageDetails) {
         HandleHTTPError(r, "Unauthorized", messageDetails, 401);
     }
+
     /**
      * Handles HTTP errors changing original response, setting status to {@code status}, message to {@code message} and description to {@code messageDetails}
      * @param r Response object
@@ -80,6 +89,38 @@ public class AuthInterceptor implements HandlerInterceptor {
                         )));
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Method handling code exchange
+     * Checks if code exists and belongs to user sending request
+     * Code should be sent in X-Code header
+     * @param userID id of user requesting data
+     * @param request current HTTP request
+     * @param response current HTTP response
+     * @return true if code is valid, false otherwise
+     */
+    private boolean isCodeAuthentic(String userID, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            Integer code = Integer.parseInt(request.getHeader("X-Code"));
+
+            Query query = new Query();
+            query.addCriteria(new Criteria().andOperator(Criteria.where("code").is(code), Criteria.where("bindTo").is(userID)));
+            Code result = mongoTemplate.findAndRemove(query, Code.class);
+
+            if(result == null) {
+                HandleHTTPError(response, "Unauthorized", "Authorization code is invalid", 401);
+                return false;
+            }
+
+            return true;
+        } catch (NullPointerException e) {
+            HandleHTTPError(response, "Unauthorized", "Authorization code is missing", 401);
+            return false;
+        } catch (NumberFormatException e) {
+            HandleHTTPError(response, "Unauthorized", "Authorization code is in invalid type", 401);
+            return false;
         }
     }
 
@@ -150,24 +191,24 @@ public class AuthInterceptor implements HandlerInterceptor {
 
             // Get user from JWT's payload and set it to current user
             User u = objectMapper.readValue(json.get(dotenv.get("APP_JWT_NAMESPACE") + "user").toString(), User.class);
+
+            // If authorization needed and code is not authentic discontinue request
+            if(annotation.codeNeeded() && !this.isCodeAuthentic(u.getUser_id(), request, response)) return false;
+
             UserAccounts ua = objectMapper.readValue(json.get(dotenv.get("APP_JWT_NAMESPACE") + "metadata").toString(), UserAccounts.class);
             u.setUserAccounts(ua);
             this.currentUser.setCurrentUser(u);
         } catch (InvalidPublicKeyException e) {
             HandleHTTPError(response, "Invalid signature or claims");
-            e.printStackTrace();
             return false;
         } catch (JWTDecodeException | JwkException e) {
             HandleHTTPError(response, "Invalid token");
-            e.printStackTrace();
             return false;
         } catch (TokenExpiredException e){
             HandleHTTPError(response, "Token expired");
-            e.printStackTrace();
             return false;
         } catch (JsonProcessingException e) {
             HandleHTTPError(response, "Internal error", "Error parsing client's token", 500);
-            e.printStackTrace();
             return false;
         }
 
