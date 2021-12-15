@@ -51,8 +51,8 @@ public class BankAccountController extends Application {
                         409));
 
         try {
-            Account account = this.accountService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
-            String iban = this.accountService.getUserAccountIBAN(account, accountType);
+            Account account = this.userService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
+            String iban = this.userService.getUserAccountIBAN(account, accountType);
 
             if (iban != null) {
                 return alreadyOpened;
@@ -72,7 +72,7 @@ public class BankAccountController extends Application {
 
         try {
             // Link account to Auth0 user's profile
-            this.accountService.linkAccountToUser(this.currentUser.getCurrentUser().getUser_id(), accountType, iban);
+            this.userService.linkAccountToUser(this.currentUser.getCurrentUser().getUser_id(), accountType, iban);
         } catch (UnirestException | JsonProcessingException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         } catch (ThrowableErrorResponse e) {

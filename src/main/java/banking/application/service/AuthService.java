@@ -11,10 +11,7 @@ import org.springframework.stereotype.Service;
  * Handles code generation
  */
 @Service
-public class AuthService implements IAuthService {
-    @Autowired
-    CodeRepository codeRepository;
-
+public class AuthService extends EntryService implements IAuthService {
     @Override
     public Code generateCodeForUser(String userID) {
         Code code = new Code(userID);
