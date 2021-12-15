@@ -40,7 +40,7 @@ public class UserController extends Application {
         try {
             // Get account by Auth0 id
             String id = this.currentUser.getCurrentUser().getUser_id();
-            Account a = this.accountService.getAuthAccount(id);
+            Account a = this.userService.getAuthAccount(id);
 
             return ResponseEntity.status(HttpStatus.OK).body(a);
         } catch (UnirestException | JsonProcessingException e) {
