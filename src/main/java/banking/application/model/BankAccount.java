@@ -16,7 +16,6 @@ public class BankAccount {
     private String id;
 
     private List<Currency> currencies;
-    private List<Code> codes;
 
     @Nullable
     private List<Loan> loans;
@@ -31,14 +30,9 @@ public class BankAccount {
     private CryptoAccountInfo cryptoAccountInfo;
 
 
-    public BankAccount(String id, List<Currency> currencies, List<Code> codes) {
+    public BankAccount(String id, List<Currency> currencies) {
         this.id = id;
         this.currencies = currencies;
-        this.codes = codes;
-    }
-
-    public List<Code> getCodes() {
-        return codes;
     }
 
     @Override
@@ -46,7 +40,6 @@ public class BankAccount {
         return "BankAccount{" +
                 "id='" + id + '\'' +
                 ", currencies=" + currencies +
-                ", codes=" + codes +
                 '}';
     }
 }

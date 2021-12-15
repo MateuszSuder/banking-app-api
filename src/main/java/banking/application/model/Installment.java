@@ -5,6 +5,9 @@ import org.springframework.lang.Nullable;
 
 import java.time.LocalTime;
 
+/**
+ * POJO class for installments
+ */
 public class Installment {
     @Id
     Integer id;
