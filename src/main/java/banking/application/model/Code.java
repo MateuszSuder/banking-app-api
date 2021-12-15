@@ -21,7 +21,7 @@ public class Code {
     @Field("bindTo")
     String userID;
 
-    @Indexed(expireAfterSeconds = 600)
+    @Indexed(expireAfterSeconds = 300)
     LocalDateTime timeGenerated;
 
     public Code(){}
