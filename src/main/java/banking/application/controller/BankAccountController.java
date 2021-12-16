@@ -10,12 +10,14 @@ import banking.application.util.ErrorResponse;
 import banking.application.util.IBAN;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.HashMap;
@@ -51,7 +53,7 @@ public class BankAccountController extends Application {
                         409));
 
         try {
-            Account account = this.userService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
+            Account account = this.authService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
             String iban = this.userService.getUserAccountIBAN(account, accountType);
 
             if (iban != null) {
@@ -86,5 +88,11 @@ public class BankAccountController extends Application {
 
         // Return iban if created
         return ResponseEntity.status(HttpStatus.CREATED).body(json);
+    }
+
+    @Auth(codeNeeded = true)
+    @PostMapping("transfer/{accountType}")
+    public ResponseEntity TransferMoney(@PathVariable AccountType accountType) {
+        return ResponseEntity.ok(null);
     }
 }

@@ -55,6 +55,35 @@ public class IBAN {
         checksum[1] = Integer.parseInt(String.valueOf(csm[1]));
     }
 
+    public AccountType getAccountType(String iban) throws IllegalArgumentException {
+        int numberRepresentedType = Integer.parseInt(String.valueOf(iban.charAt(11)));
+
+        switch (numberRepresentedType) {
+            case 1:
+                return AccountType.standard;
+            case 2:
+                return AccountType.multi;
+            case 3:
+                return AccountType.crypto;
+            default:
+                throw new IllegalArgumentException("<1-3> integers allowed");
+        }
+    }
+
+    public String getIBAN() {
+        StringBuilder iban = new StringBuilder();
+
+        int[][] parts = {this.checksum, this.bankCode, this.accountNumber};
+
+        for(int[] part : parts) {
+            for(int digit: part) {
+                iban.append(digit);
+            }
+        }
+
+        return iban.toString();
+    }
+
     @Override
     public String toString() {
         StringBuilder res = new StringBuilder();
@@ -79,19 +108,5 @@ public class IBAN {
 
         res.append(prettyIBAN.apply(new int[][]{bankCode, accountNumber}));
         return res.toString();
-    }
-
-    public String getIBAN() {
-        StringBuilder iban = new StringBuilder();
-
-        int[][] parts = {this.checksum, this.bankCode, this.accountNumber};
-
-        for(int[] part : parts) {
-            for(int digit: part) {
-                iban.append(digit);
-            }
-        }
-
-        return iban.toString();
     }
 }
