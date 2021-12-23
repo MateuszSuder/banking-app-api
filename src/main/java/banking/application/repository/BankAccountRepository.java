@@ -9,4 +9,8 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
     // Get account with codes only
     @Query(fields = "{'codes' : 1, '_id' : 0 }")
     BankAccount findItemById(String id);
+
+    // Get account with currency only
+    @Query(fields = "{'codes' : 1, '_id' : 0 }")
+    BankAccount findCurrencyById(String id);
 }

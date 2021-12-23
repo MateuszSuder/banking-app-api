@@ -9,6 +9,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.sql.Timestamp;
 
@@ -21,6 +22,10 @@ public abstract class EntryService {
 
     // Stringified JSON to JAVA object mapper.
     protected ObjectMapper objectMapper = new ObjectMapper();
+
+    // Template for mongo operations
+    @Autowired
+    protected MongoTemplate mongoTemplate;
 
     @Autowired
     BankAccountRepository bankAccountRepository;
