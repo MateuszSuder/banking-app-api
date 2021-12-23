@@ -101,8 +101,11 @@ public class BankAccountController extends Application {
         // todo change when adding transfers between other types
         if(accountType != AccountType.standard) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Only standard accounts", "", 400));
 
-
-        this.accountService.transferMoney(this.currentUser.getCurrentUser().getUserAccounts().getStandard(), transferInput.getTo(), transferInput.getValue());
+        try {
+            this.accountService.transferMoney(this.currentUser.getCurrentUser().getUserAccounts().getStandard(), transferInput.getTo(), transferInput.getValue());
+        } catch (ThrowableErrorResponse e) {
+            return ResponseEntity.status(e.code).body(e.getErrorResponse());
+        }
         return ResponseEntity.ok(null);
     }
 }

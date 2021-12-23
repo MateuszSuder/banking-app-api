@@ -71,7 +71,7 @@ public class Application {
 	}
 
 	@ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-	public ResponseEntity<ErrorResponse> handleNoHandlerFound(HttpMediaTypeNotSupportedException ex) {
+	public ResponseEntity<ErrorResponse> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Media type not supported", ex.getLocalizedMessage(), 400));
 	}
 }

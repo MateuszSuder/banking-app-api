@@ -55,7 +55,17 @@ public class IBAN {
         checksum[1] = Integer.parseInt(String.valueOf(csm[1]));
     }
 
-    public AccountType getAccountType(String iban) throws IllegalArgumentException {
+    public static boolean isValidIBAN(String iban) {
+        if(iban.length() != 26) {
+            return false;
+        }
+        return true;
+    }
+
+    public static AccountType getAccountType(String iban) throws IllegalArgumentException {
+        if(!isValidIBAN(iban)) {
+            throw new IllegalArgumentException("Invalid IBAN");
+        }
         int numberRepresentedType = Integer.parseInt(String.valueOf(iban.charAt(11)));
 
         switch (numberRepresentedType) {
