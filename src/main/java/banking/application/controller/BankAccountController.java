@@ -5,6 +5,7 @@ import banking.application.annotation.Auth;
 import banking.application.exception.ThrowableErrorResponse;
 import banking.application.model.Account;
 import banking.application.model.Currency;
+import banking.application.model.input.TransferInput;
 import banking.application.util.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -12,12 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Controller handling users banking accountsv
@@ -94,14 +97,12 @@ public class BankAccountController extends Application {
      */
     @Auth(codeNeeded = false)
     @PostMapping("transfer/{accountType}")
-    public ResponseEntity TransferMoney(@PathVariable AccountType accountType) {
+    public ResponseEntity TransferMoney(@PathVariable AccountType accountType, @Valid @RequestBody TransferInput transferInput) {
         // todo change when adding transfers between other types
         if(accountType != AccountType.standard) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Only standard accounts", "", 400));
-        ArrayList<Currencies> currenciesList = new ArrayList<Currencies>();
-        currenciesList.add(Currencies.PLN);
-        currenciesList.add(Currencies.USD);
-        this.accountService.transferMoney(this.currentUser.getCurrentUser().getUserAccounts().getStandard(), "", new Currency(Currencies.PLN, 100));
 
+
+        this.accountService.transferMoney(this.currentUser.getCurrentUser().getUserAccounts().getStandard(), transferInput.getTo(), transferInput.getValue());
         return ResponseEntity.ok(null);
     }
 }
