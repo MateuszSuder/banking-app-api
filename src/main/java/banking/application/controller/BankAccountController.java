@@ -4,21 +4,23 @@ import banking.application.Application;
 import banking.application.annotation.Auth;
 import banking.application.exception.ThrowableErrorResponse;
 import banking.application.model.Account;
-import banking.application.util.AccountType;
-import banking.application.util.CurrentUser;
-import banking.application.util.ErrorResponse;
-import banking.application.util.IBAN;
+import banking.application.model.Currency;
+import banking.application.model.input.TransferInput;
+import banking.application.util.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Controller handling users banking accountsv
@@ -51,7 +53,7 @@ public class BankAccountController extends Application {
                         409));
 
         try {
-            Account account = this.userService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
+            Account account = this.authService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
             String iban = this.userService.getUserAccountIBAN(account, accountType);
 
             if (iban != null) {
@@ -86,5 +88,24 @@ public class BankAccountController extends Application {
 
         // Return iban if created
         return ResponseEntity.status(HttpStatus.CREATED).body(json);
+    }
+
+    /**
+     * Transfer money from user's chosen account to another account
+     * @param accountType type of account to send from
+     * @return balance after transfer if success else error
+     */
+    @Auth(codeNeeded = false)
+    @PostMapping("transfer/{accountType}")
+    public ResponseEntity TransferMoney(@PathVariable AccountType accountType, @Valid @RequestBody TransferInput transferInput) {
+        // todo change when adding transfers between other types
+        if(accountType != AccountType.standard) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Only standard accounts", "", 400));
+
+        try {
+            this.accountService.transferMoney(this.currentUser.getCurrentUser().getUserAccounts().getStandard(), transferInput.getTo(), transferInput.getValue());
+        } catch (ThrowableErrorResponse e) {
+            return ResponseEntity.status(e.code).body(e.getErrorResponse());
+        }
+        return ResponseEntity.ok(null);
     }
 }

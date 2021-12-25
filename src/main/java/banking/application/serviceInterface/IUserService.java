@@ -14,11 +14,6 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  * Interface for service
  */
 public interface IUserService {
-    // Stringified JSON to JAVA object mapper.
-    ObjectMapper objectMapper = new ObjectMapper();
-
-    Token getAPIToken() throws UnirestException, JsonProcessingException;
-    Account getAuthAccount(String userID) throws UnirestException, JsonProcessingException;
     void linkAccountToUser(String userID, AccountType ac, IBAN iban) throws UnirestException, JsonProcessingException, ThrowableErrorResponse;
     String getUserAccountIBAN(Account account, AccountType accountType) throws ThrowableErrorResponse;
 }

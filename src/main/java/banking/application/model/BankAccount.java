@@ -35,6 +35,10 @@ public class BankAccount {
         this.currencies = currencies;
     }
 
+    public List<Currency> getCurrencies() {
+        return currencies;
+    }
+
     @Override
     public String toString() {
         return "BankAccount{" +

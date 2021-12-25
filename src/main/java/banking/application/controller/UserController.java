@@ -8,6 +8,8 @@ import banking.application.util.CurrentUser;
 import banking.application.model.Account;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
@@ -40,7 +42,7 @@ public class UserController extends Application {
         try {
             // Get account by Auth0 id
             String id = this.currentUser.getCurrentUser().getUser_id();
-            Account a = this.userService.getAuthAccount(id);
+            Account a = this.authService.getAuthAccount(id);
 
             return ResponseEntity.status(HttpStatus.OK).body(a);
         } catch (UnirestException | JsonProcessingException e) {
@@ -55,7 +57,7 @@ public class UserController extends Application {
     /**
      * Method generating one-use authorization code.
      * Code is then sent to user's email.
-     * @return
+     * @return null
      */
     @Auth
     @PostMapping("code")
