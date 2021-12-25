@@ -6,6 +6,7 @@ import banking.application.serviceInterface.IAccountService;
 import banking.application.util.AccountType;
 import banking.application.util.Currencies;
 import banking.application.util.IBAN;
+import banking.application.util.TransactionType;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -77,7 +78,7 @@ public class AccountService extends EntryService implements IAccountService {
      * @return "from" account balance
      */
     @Transactional
-    public Currency transferMoney(String from, Recipient to, Currency currency, String title) throws ThrowableErrorResponse {
+    public Currency transferMoney(String from, Recipient to, Currency currency, String title, TransactionType transactionType) throws ThrowableErrorResponse {
         try {
             String accountNumber = to.getAccountNumber();
 
@@ -118,7 +119,7 @@ public class AccountService extends EntryService implements IAccountService {
             Update toUpdate = new Update().set("currencies.$.amount", toC.getAmount() + currency.getAmount());
             mongoTemplate.updateFirst(toQuery, toUpdate, BankAccount.class);
 
-            Transaction transaction = new Transaction(from, to, title, currency);
+            Transaction transaction = new Transaction(from, to, title, currency, transactionType);
             this.transactionRepository.insert(transaction);
 
             // Return account balance

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @SpringBootApplication
 @RequestMapping("/user")
-public class UserController extends Application {
+public class UserController extends Controller {
     // Field containing user data
     private CurrentUser currentUser;
 

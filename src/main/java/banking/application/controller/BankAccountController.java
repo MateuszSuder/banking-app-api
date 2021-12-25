@@ -9,6 +9,7 @@ import banking.application.model.input.TransferInput;
 import banking.application.util.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ import java.util.Map;
  */
 @SpringBootApplication
 @RequestMapping("/account")
-public class BankAccountController extends Application {
+public class BankAccountController extends Controller {
     // Field containing user data
     private CurrentUser currentUser;
 
@@ -101,16 +102,20 @@ public class BankAccountController extends Application {
         // todo change when adding transfers between other types
         if(accountType != AccountType.standard) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Only standard accounts", "", 400));
 
+        Currency balance = null;
+
         try {
-            this.accountService.transferMoney(
+            balance = this.accountService.transferMoney(
                     this.currentUser.getCurrentUser().getUserAccounts().getStandard(),
                     transferInput.getTo(),
                     transferInput.getValue(),
-                    transferInput.getTitle()
+                    transferInput.getTitle(),
+                    TransactionType.Manual
             );
         } catch (ThrowableErrorResponse e) {
             return ResponseEntity.status(e.code).body(e.getErrorResponse());
         }
-        return ResponseEntity.ok(null);
+
+        return ResponseEntity.ok(balance);
     }
 }

@@ -1,5 +1,6 @@
 package banking.application.model;
 
+import banking.application.util.TransactionType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -16,12 +17,14 @@ public class Transaction {
     Recipient receiverInfo;
     String title;
     Currency sendValue;
+    TransactionType transactionType;
 
-    public Transaction(String from, Recipient receiverInfo, String title, Currency sendValue) {
+    public Transaction(String from, Recipient receiverInfo, String title, Currency sendValue, TransactionType transactionType) {
         this.from = from;
         this.receiverInfo = receiverInfo;
         this.title = title;
         this.sendValue = sendValue;
+        this.transactionType = transactionType;
     }
 
     public String getFrom() {
