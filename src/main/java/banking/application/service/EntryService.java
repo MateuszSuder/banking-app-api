@@ -3,6 +3,7 @@ package banking.application.service;
 import banking.application.model.Token;
 import banking.application.repository.BankAccountRepository;
 import banking.application.repository.CodeRepository;
+import banking.application.repository.TransactionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
@@ -32,6 +33,9 @@ public abstract class EntryService {
 
     @Autowired
     CodeRepository codeRepository;
+
+    @Autowired
+    TransactionRepository transactionRepository;
 
     // Method for easy getting Auth0 API user endpoint
     protected String getUserEndpoint(String userID) {
