@@ -1,16 +1,21 @@
 package banking.application.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * Document for transactions collection
  */
 @Document("transactions")
 public class Transaction {
-    private final String from;
-    private final Recipient receiverInfo;
-    private final String title;
-    private final Currency sendValue;
+
+    @Indexed(name = "fromIBAN")
+    String from;
+    Recipient receiverInfo;
+    String title;
+    Currency sendValue;
 
     public Transaction(String from, Recipient receiverInfo, String title, Currency sendValue) {
         this.from = from;
