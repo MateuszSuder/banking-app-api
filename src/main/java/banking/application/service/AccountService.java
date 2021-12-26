@@ -1,9 +1,7 @@
 package banking.application.service;
 
 import banking.application.exception.ThrowableErrorResponse;
-import banking.application.model.BankAccount;
-import banking.application.model.Currency;
-import banking.application.model.User;
+import banking.application.model.*;
 import banking.application.serviceInterface.IAccountService;
 import banking.application.util.AccountType;
 import banking.application.util.Currencies;
@@ -79,10 +77,15 @@ public class AccountService extends EntryService implements IAccountService {
      * @return "from" account balance
      */
     @Transactional
-    public Currency transferMoney(String from, String to, Currency currency) throws ThrowableErrorResponse {
+    public Currency transferMoney(String from, Recipient to, Currency currency, String title) throws ThrowableErrorResponse {
         try {
+            String accountNumber = to.getAccountNumber();
+
+            if(from.equals(accountNumber))
+                throw new ThrowableErrorResponse("From equals to", "Account's IBANs are the same", 409);
+
             // Transfers available only from same accounts
-            if(IBAN.getAccountType(from) != IBAN.getAccountType(to))
+            if(IBAN.getAccountType(from) != IBAN.getAccountType(accountNumber))
                 throw new ThrowableErrorResponse("Different account types", "Accounts are of other account types", 400);
 
             // Get currency amount from sender
@@ -92,16 +95,18 @@ public class AccountService extends EntryService implements IAccountService {
             if(c.getAmount() < currency.getAmount())
                 throw new ThrowableErrorResponse("Insufficient funds", "Account with iban " + from + " doesn't have enough funds", 406);
 
-            // Find recipient account
-            Optional<BankAccount> destination = bankAccountRepository.findById(to);
+            // Find recipient balance
+            List<Currency> toCurrencies = this.getAccountBalances(accountNumber, List.of(currency.getCurrency()));
 
             // If account not found
-            if(destination.isEmpty()) {
-                throw new ThrowableErrorResponse("Account not found", "Account with iban " + to + "doesn't exists", 404);
+            if(toCurrencies.size() == 0) {
+                throw new ThrowableErrorResponse("Account not or currency not found",
+                        "Account with iban " + to + "doesn't exists or doesn't have this type of currency",
+                        404);
             }
 
             // Get balance of recipient
-            Currency toC = this.getAccountBalances(to, List.of(currency.getCurrency())).get(0);
+            Currency toC = this.getAccountBalances(accountNumber, List.of(currency.getCurrency())).get(0);
 
             // Find account's currency and subtract transferred value
             Query fromQuery = new Query().addCriteria(Criteria.where("_id").is(from)).addCriteria(Criteria.where("currencies.currency").is(currency.getCurrency()));
@@ -109,9 +114,12 @@ public class AccountService extends EntryService implements IAccountService {
             mongoTemplate.updateFirst(fromQuery, fromUpdate, BankAccount.class);
 
             // Find account's currency and add transferred value
-            Query toQuery = new Query().addCriteria(Criteria.where("_id").is(to)).addCriteria(Criteria.where("currencies.currency").is(currency.getCurrency()));
+            Query toQuery = new Query().addCriteria(Criteria.where("_id").is(accountNumber)).addCriteria(Criteria.where("currencies.currency").is(currency.getCurrency()));
             Update toUpdate = new Update().set("currencies.$.amount", toC.getAmount() + currency.getAmount());
             mongoTemplate.updateFirst(toQuery, toUpdate, BankAccount.class);
+
+            Transaction transaction = new Transaction(from, to, title, currency);
+            this.transactionRepository.insert(transaction);
 
             // Return account balance
             return new Currency(currency.getCurrency(), c.getAmount() - currency.getAmount());
