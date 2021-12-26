@@ -1,7 +1,8 @@
 package banking.application.model.input;
 
+// Filter for choosing between incoming and outgoing
 public enum IOFilter {
-    Any,
-    Incoming,
-    Outgoing
+    ANY,
+    INCOMING,
+    OUTGOING
 }

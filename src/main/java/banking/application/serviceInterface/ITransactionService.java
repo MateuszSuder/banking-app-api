@@ -1,10 +1,8 @@
 package banking.application.serviceInterface;
 
-import banking.application.model.Transaction;
 import banking.application.model.input.TransactionPageInput;
-
-import java.util.List;
+import banking.application.model.output.TransactionPageOutput;
 
 public interface ITransactionService {
-    List<Transaction> getTransactionsPage(String ownerIBAN, TransactionPageInput transactionPageInput);
+    TransactionPageOutput getTransactionsPage(String ownerIBAN, TransactionPageInput transactionPageInput);
 }

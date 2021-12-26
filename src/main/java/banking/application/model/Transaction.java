@@ -1,10 +1,8 @@
 package banking.application.model;
 
 import banking.application.util.TransactionType;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * Document for transactions collection
@@ -12,11 +10,13 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document("transactions")
 public class Transaction {
 
-    @Indexed(name = "fromIBAN")
+    @Indexed
     String from;
     Recipient receiverInfo;
+    @Indexed
     String title;
     Currency sendValue;
+    @Indexed
     TransactionType transactionType;
 
     public Transaction(String from, Recipient receiverInfo, String title, Currency sendValue, TransactionType transactionType) {

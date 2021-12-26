@@ -1,9 +1,7 @@
 package banking.application.controller;
 
-import banking.application.service.AccountService;
-import banking.application.service.AuthService;
-import banking.application.service.MailerService;
-import banking.application.service.UserService;
+import banking.application.service.*;
+import banking.application.util.CurrentUser;
 import banking.application.util.ErrorResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +32,12 @@ public abstract class Controller {
 
     @Autowired
     protected AccountService accountService;
+
+    @Autowired
+    protected TransactionService transactionService;
+
+    @Autowired
+    protected CurrentUser currentUser;
 
     // Handlers for specific exceptions
     @ExceptionHandler(MethodArgumentNotValidException.class)

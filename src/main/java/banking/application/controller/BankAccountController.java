@@ -29,15 +29,6 @@ import java.util.Map;
 @SpringBootApplication
 @RequestMapping("/account")
 public class BankAccountController extends Controller {
-    // Field containing user data
-    private CurrentUser currentUser;
-
-    // Autowired constructor passing current user to class field
-    @Autowired
-    BankAccountController(CurrentUser currentUser) {
-        this.currentUser = currentUser;
-    }
-
     /**
      * Open account for JWT's owner. Disallows creating same type accounts.
      * @param accountType which account to open
@@ -110,7 +101,7 @@ public class BankAccountController extends Controller {
                     transferInput.getTo(),
                     transferInput.getValue(),
                     transferInput.getTitle(),
-                    TransactionType.Manual
+                    TransactionType.MANUAL
             );
         } catch (ThrowableErrorResponse e) {
             return ResponseEntity.status(e.code).body(e.getErrorResponse());

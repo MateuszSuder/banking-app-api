@@ -22,16 +22,6 @@ import org.springframework.web.bind.annotation.*;
 @SpringBootApplication
 @RequestMapping("/user")
 public class UserController extends Controller {
-    // Field containing user data
-    private CurrentUser currentUser;
-
-    // Autowired constructor passing current user to class field
-    @Autowired
-    UserController(CurrentUser currentUser) {
-        this.currentUser = currentUser;
-    }
-
-
     /**
      * Get user Auth0 account
      * @return user's Auth0 profile

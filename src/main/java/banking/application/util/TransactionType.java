@@ -1,7 +1,10 @@
 package banking.application.util;
 
+/**
+ * Type of transaction
+ */
 public enum TransactionType {
-    Manual,
-    StandingOrder,
-    LoanPayment
+    MANUAL,
+    STANDING_ORDER,
+    LOAN_PAYMENT
 }
