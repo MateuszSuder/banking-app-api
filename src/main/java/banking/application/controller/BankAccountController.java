@@ -109,4 +109,9 @@ public class BankAccountController extends Controller {
 
         return ResponseEntity.ok(balance);
     }
+    @Auth
+    @GetMapping("info/{accountType}")
+    public ResponseEntity BankAccountInfo(@PathVariable AccountType accountType){
+        return ResponseEntity.ok(null);
+    }
 }
