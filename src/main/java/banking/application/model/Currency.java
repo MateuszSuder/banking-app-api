@@ -1,6 +1,7 @@
 package banking.application.model;
 
 import banking.application.util.Currencies;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -12,9 +13,11 @@ import javax.validation.constraints.PositiveOrZero;
  */
 public class Currency {
 
+    @Indexed
     @NotNull(message = "Currency is missing")
     Currencies currency;
 
+    @Indexed
     @Positive(message = "Amount must be higher than 0")
     double amount;
 

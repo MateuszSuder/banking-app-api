@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @SpringBootApplication
 @RequestMapping("/")
-public class HealthController extends Application {
+public class HealthController extends Controller {
     /**
      * Return current time to show if service is alive.
      * @return Current time.
