@@ -198,7 +198,9 @@ public class AuthInterceptor implements HandlerInterceptor {
             try {
                 UserAccounts ua = objectMapper.readValue(json.get(dotenv.get("APP_JWT_NAMESPACE") + "metadata").toString(), UserAccounts.class);
                 u.setUserAccounts(ua);
-            } catch (JSONException e) {}
+            } catch (JSONException e) {
+                u.setUserAccounts(new UserAccounts());
+            }
             this.currentUser.setCurrentUser(u);
         } catch (InvalidPublicKeyException e) {
             HandleHTTPError(response, "Invalid signature or claims");
