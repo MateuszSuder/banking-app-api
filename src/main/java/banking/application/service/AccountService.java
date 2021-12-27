@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AccountService extends EntryService implements IAccountService {
@@ -127,6 +128,19 @@ public class AccountService extends EntryService implements IAccountService {
             // Throw for illegal iban
             throw new ThrowableErrorResponse("Invalid iban", e.getMessage(), 400);
         }
+    }
+
+    /**
+     * Returns <code>BankAccount</code> for given <code>IBAN</code>
+     * @param IBAN requested bank account's IBAN
+     * @return bank account info for given IBAN
+     * @throws ThrowableErrorResponse for invalid IBAN
+     */
+    @Override
+    public BankAccount bankInfo(String IBAN) throws ThrowableErrorResponse {
+        Optional<BankAccount> info = this.bankAccountRepository.findById(IBAN);
+        if(info.isPresent()) return info.get();
+        throw new ThrowableErrorResponse("Invalid iban", "Account with IBAN " + IBAN + " not found", 500);
     }
 }
 

@@ -4,7 +4,9 @@ import banking.application.Application;
 import banking.application.annotation.Auth;
 import banking.application.exception.ThrowableErrorResponse;
 import banking.application.model.Account;
+import banking.application.model.BankAccount;
 import banking.application.model.Currency;
+import banking.application.model.UserAccounts;
 import banking.application.model.input.TransferInput;
 import banking.application.util.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -108,5 +110,47 @@ public class BankAccountController extends Controller {
         }
 
         return ResponseEntity.ok(balance);
+    }
+
+    /**
+     * Returns information about user's bank account
+     * @param accountType type of account to get info of
+     * @return requested bank account information
+     */
+    @Auth
+    @GetMapping("info/{accountType}")
+    public ResponseEntity BankAccountInfo(@PathVariable AccountType accountType) {
+        UserAccounts userAccounts = this.currentUser.getCurrentUser().getUserAccounts();
+        BankAccount bankAccount = null;
+        try {
+            switch (accountType) {
+                case standard:
+                    if (userAccounts.getStandard() != null) {
+                        bankAccount = this.accountService.bankInfo(userAccounts.getStandard());
+                    }
+                    break;
+                case multi:
+                    if (userAccounts.getMulti() != null) {
+                       bankAccount = this.accountService.bankInfo(userAccounts.getMulti());
+                    }
+                    break;
+                case crypto:
+                    if (userAccounts.getCrypto() != null) {
+                        bankAccount = this.accountService.bankInfo(userAccounts.getCrypto());
+                    }
+                    break;
+            }
+        } catch (ThrowableErrorResponse e) {
+            return ResponseEntity.status(e.code).body(e.getErrorResponse());
+        }
+
+        if(bankAccount != null) {
+            return ResponseEntity.status(200).body(bankAccount);
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(
+                "Not found",
+                "Account with type " + accountType + " not found",
+                404));
     }
 }

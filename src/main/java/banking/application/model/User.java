@@ -1,6 +1,9 @@
 package banking.application.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.lang.Nullable;
+
+import javax.validation.constraints.Null;
 
 /**
  * User POJO class

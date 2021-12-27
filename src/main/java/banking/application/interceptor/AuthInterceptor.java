@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -194,9 +195,12 @@ public class AuthInterceptor implements HandlerInterceptor {
 
             // If authorization needed and code is not authentic discontinue request
             if(annotation.codeNeeded() && !this.isCodeAuthentic(u.getUser_id(), request, response)) return false;
-
-            UserAccounts ua = objectMapper.readValue(json.get(dotenv.get("APP_JWT_NAMESPACE") + "metadata").toString(), UserAccounts.class);
-            u.setUserAccounts(ua);
+            try {
+                UserAccounts ua = objectMapper.readValue(json.get(dotenv.get("APP_JWT_NAMESPACE") + "metadata").toString(), UserAccounts.class);
+                u.setUserAccounts(ua);
+            } catch (JSONException e) {
+                u.setUserAccounts(new UserAccounts());
+            }
             this.currentUser.setCurrentUser(u);
         } catch (InvalidPublicKeyException e) {
             HandleHTTPError(response, "Invalid signature or claims");

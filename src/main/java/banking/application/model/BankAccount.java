@@ -35,6 +35,30 @@ public class BankAccount {
         this.currencies = currencies;
     }
 
+    public String getId() {
+        return id;
+    }
+
+    @Nullable
+    public List<Loan> getLoans() {
+        return loans;
+    }
+
+    @Nullable
+    public List<StandingOrder> getStandingOrders() {
+        return standingOrders;
+    }
+
+    @Nullable
+    public List<Recipient> getSavedRecipients() {
+        return savedRecipients;
+    }
+
+    @Nullable
+    public CryptoAccountInfo getCryptoAccountInfo() {
+        return cryptoAccountInfo;
+    }
+
     public List<Currency> getCurrencies() {
         return currencies;
     }
