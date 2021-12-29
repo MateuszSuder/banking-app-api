@@ -37,6 +37,9 @@ public abstract class Controller {
     protected TransactionService transactionService;
 
     @Autowired
+    protected LoanService loanService;
+
+    @Autowired
     protected CurrentUser currentUser;
 
     // Handlers for specific exceptions

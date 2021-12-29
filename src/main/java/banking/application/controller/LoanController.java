@@ -1,7 +1,11 @@
 package banking.application.controller;
 
 import banking.application.annotation.Auth;
+import banking.application.exception.ThrowableErrorResponse;
+import banking.application.model.Loan;
 import banking.application.model.input.LoanInput;
+import banking.application.util.AccountType;
+import banking.application.util.ErrorResponse;
 import banking.application.util.LoanConfig;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.ResponseEntity;
@@ -38,8 +42,22 @@ public class LoanController extends Controller {
 
     @Auth
     @PostMapping("/take")
-    public ResponseEntity TakeLoan(@Valid @RequestBody LoanInput loanInput) {
-        return ResponseEntity.ok(null);
+    public ResponseEntity<?> TakeLoan(@Valid @RequestBody LoanInput loanInput) {
+        if(this.currentUser.getCurrentUser().getUserAccounts().isOpen(AccountType.standard)) {
+            try {
+                Loan loan = this.loanService.takeLoan(this.currentUser.getCurrentUser().getUserAccounts().getStandard(), loanInput);
+                return ResponseEntity.ok(loan);
+            } catch (ThrowableErrorResponse e) {
+                return ResponseEntity.status(e.code).body(e.getErrorResponse());
+            }
+        }
+
+        return ResponseEntity.status(404).body(
+                new ErrorResponse(
+                        "Account not found",
+                        "User doesn't have standard account open",
+                        404)
+        );
     }
 
     @Auth

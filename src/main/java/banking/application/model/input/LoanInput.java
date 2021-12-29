@@ -5,6 +5,7 @@ import org.springframework.lang.Nullable;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
 
 public class LoanInput {
     @Min(value = LoanConfig.minLoanValue, message = "Loan value must be ≥ " + LoanConfig.minLoanValue)
@@ -15,10 +16,18 @@ public class LoanInput {
     @Max(value = LoanConfig.maxLoanLengthInMonths, message = "Loan length in months must be ≤ " + LoanConfig.maxLoanLengthInMonths)
     int loanLength;
 
+    @Positive(message = "Loan rate is missing or invalid")
+    double loanRate;
+
     @Nullable
     Boolean autoPayment;
 
-    public LoanInput(){}
+    public LoanInput(float loanAmount, int loanLength, double loanRate, @Nullable Boolean autoPayment) {
+        this.loanAmount = loanAmount;
+        this.loanLength = loanLength;
+        this.loanRate = loanRate;
+        this.autoPayment = autoPayment;
+    }
 
     public float getLoanAmount() {
         return loanAmount;
@@ -26,6 +35,10 @@ public class LoanInput {
 
     public int getLoanLength() {
         return loanLength;
+    }
+
+    public double getLoanRate() {
+        return loanRate;
     }
 
     @Nullable
