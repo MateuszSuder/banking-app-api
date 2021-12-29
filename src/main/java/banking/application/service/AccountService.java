@@ -106,17 +106,14 @@ public class AccountService extends EntryService implements IAccountService {
                         404);
             }
 
-            // Get balance of recipient
-            Currency toC = this.getAccountBalances(accountNumber, List.of(currency.getCurrency())).get(0);
-
             // Find account's currency and subtract transferred value
             Query fromQuery = new Query().addCriteria(Criteria.where("_id").is(from)).addCriteria(Criteria.where("currencies.currency").is(currency.getCurrency()));
-            Update fromUpdate = new Update().set("currencies.$.amount", c.getAmount() - currency.getAmount());
+            Update fromUpdate = new Update().inc("currencies.$.amount", -currency.getAmount());
             mongoTemplate.updateFirst(fromQuery, fromUpdate, BankAccount.class);
 
             // Find account's currency and add transferred value
             Query toQuery = new Query().addCriteria(Criteria.where("_id").is(accountNumber)).addCriteria(Criteria.where("currencies.currency").is(currency.getCurrency()));
-            Update toUpdate = new Update().set("currencies.$.amount", toC.getAmount() + currency.getAmount());
+            Update toUpdate = new Update().inc("currencies.$.amount", currency.getAmount());
             mongoTemplate.updateFirst(toQuery, toUpdate, BankAccount.class);
 
             Transaction transaction = new Transaction(from, to, title, currency, transactionType);
