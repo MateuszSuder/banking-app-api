@@ -6,26 +6,30 @@ import banking.application.model.Installment;
 import banking.application.model.Loan;
 import banking.application.model.input.LoanInput;
 import banking.application.serviceInterface.ILoanService;
-import banking.application.util.LoanConfig;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 public class LoanService extends EntryService implements ILoanService {
     @Override
     public boolean accountHasActiveLoan(String iban) {
-        return false;
+        Optional<Boolean> active = this.bankAccountRepository.checkIfAccountIsActive(iban);
+
+        return active.orElse(false);
     }
 
     @Override
+    @Transactional
     public Loan takeLoan(String iban, LoanInput loanInput) throws ThrowableErrorResponse {
         if(this.accountHasActiveLoan(iban)) {
             throw new ThrowableErrorResponse(
@@ -74,7 +78,7 @@ public class LoanService extends EntryService implements ILoanService {
         Update update = new Update();
         update.push("loans", loan);
 
-        this.mongoTemplate.updateMulti(query, update, BankAccount.class);
+        this.mongoTemplate.updateFirst(query, update, BankAccount.class);
 
         return loan;
     }
