@@ -5,6 +5,8 @@ import banking.application.model.*;
 import banking.application.model.input.LoanInput;
 import banking.application.serviceInterface.ILoanService;
 import com.mongodb.bulk.BulkWriteResult;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -14,12 +16,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
 @Service
 public class LoanService extends EntryService implements ILoanService {
+
+	@Bean(initMethod = "init")
+	public void init() {
+		this.loanHandler();
+	}
+
     @Override
     public boolean accountHasActiveLoan(String iban) {
         Optional<Boolean> active = this.bankAccountRepository.checkIfAccountIsActive(iban);
@@ -83,13 +92,13 @@ public class LoanService extends EntryService implements ILoanService {
     }
 
     @Override
-//    @Scheduled(cron = "0 0 0 ? * *")
+    @Scheduled(cron = "0 0 0 ? * *")
     @Transactional
-    @Scheduled(cron = "0 * * ? * *")
     public void loanHandler() {
-        List<SiteConfig> siteConfig = this.configRepository.findAll();
+		List<SiteConfig> siteConfig = this.configRepository.findAll();
 
         if(siteConfig.size() > 0) {
+			SiteConfig config = new SiteConfig();
             Calendar now = Calendar.getInstance();
             now.setTime(new Date());
 
@@ -102,6 +111,7 @@ public class LoanService extends EntryService implements ILoanService {
 
                 if(now.get(Calendar.DAY_OF_MONTH) != autoPay.get(Calendar.DAY_OF_MONTH)) {
                     this.autoPayLoans();
+					lastAutoPay = new Date();
                 }
             }
 
@@ -111,19 +121,31 @@ public class LoanService extends EntryService implements ILoanService {
 
                 if(now.get(Calendar.DAY_OF_MONTH) != calculateInterest.get(Calendar.DAY_OF_MONTH)) {
                     this.calculateInterest();
+					lastCalculateInterest = new Date();
                 }
             }
+
+			config.setLastAutoPayLoan(lastAutoPay);
+			config.setLastCalculateInterest(lastCalculateInterest);
+			this.configRepository.save(config);
         } else {
             this.autoPayLoans();
             this.calculateInterest();
+
+			Date date = new Date();
+			SiteConfig config = new SiteConfig();
+			config.setLastCalculateInterest(date);
+			config.setLastAutoPayLoan(date);
+
+			this.configRepository.save(config);
         }
     }
 
     @Override
     @Transactional
     public void autoPayLoans() {
-        System.out.println("loan");
-        List<AccountAbleToPay> activeLoansAccounts = this.bankAccountRepository.getIDsOfAccountsWithActiveLoan();
+		System.out.println("LOAN");
+		List<AccountAbleToPay> activeLoansAccounts = this.bankAccountRepository.getIDsOfAccountsWithActiveLoan();
         if(activeLoansAccounts.size() == 0) return;
         BulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, BankAccount.class);
         for(AccountAbleToPay acc : activeLoansAccounts) {
@@ -153,15 +175,14 @@ public class LoanService extends EntryService implements ILoanService {
                 bulkOperations.updateOne(findAccount, update);
             }
         }
-        BulkWriteResult bulkWriteResult = bulkOperations.execute();
-        System.out.println(bulkWriteResult);
+        bulkOperations.execute();
     }
 
     @Override
     @Transactional
     public void calculateInterest() {
-        System.out.println("interest");
-        List<AccountWithInterest> accountsWithInterest = this.bankAccountRepository.getAccountsWithInterestToPay();
+		System.out.println("INTEREST");
+		List<AccountWithInterest> accountsWithInterest = this.bankAccountRepository.getAccountsWithInterestToPay();
         if(accountsWithInterest.size() == 0) return;
         BulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, BankAccount.class);
         for(AccountWithInterest acc : accountsWithInterest) {
@@ -174,7 +195,6 @@ public class LoanService extends EntryService implements ILoanService {
             ));
             bulkOperations.updateOne(findAccount, updateInterest);
         }
-        BulkWriteResult bulkWriteResult = bulkOperations.execute();
-        System.out.println(bulkWriteResult);
+        bulkOperations.execute();
     }
 }
