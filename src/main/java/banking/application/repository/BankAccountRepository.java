@@ -1,6 +1,7 @@
 package banking.application.repository;
 
 import banking.application.model.AccountAbleToPay;
+import banking.application.model.AccountWithInterest;
 import banking.application.model.BankAccount;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -85,11 +86,52 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
                     "  loanId: 1" +
                     "  toPay: 1" +
                     "}}",
-            "{ $match: {\n" +
-                    "  toPay: { $gt: 0}\n" +
+            "{ $match: {" +
+                    "  toPay: { $gt: 0}" +
                     "}}"
     })
     List<AccountAbleToPay> getIDsOfAccountsWithActiveLoan();
+
+    @Aggregation(pipeline = {
+            "{ $match: {" +
+                "loans: { $exists: true }" +
+            "}}",
+            "{ $project: {" +
+                "  startedAtDay: { $dayOfMonth: " +
+                "    { $last: '$loans.startedAt' }" +
+                "  }," +
+                "  dayNow: { $dayOfMonth: '$$NOW' }," +
+                "  monthDiff: { $subtract: [" +
+                "      { $month: { $last: '$loans.startedAt' }}," +
+                "      { $month: '$$NOW'}" +
+                "    ]}," +
+                "  installments: { $last: '$loans.installments' }," +
+                "  auto: { $last: '$loans.autoPayment' }," +
+                "  interest: { $last: '$loans.interest' }," +
+                "  loanId: { $add: [{ $size: '$loans' }, -1]}" +
+            "}}",
+            "{ $redact: {" +
+                "  $cond: [" +
+                "    { $and: [" +
+                "        {$eq: ['$startedAtDay', '$dayNow']}," +
+                "        {$ne: ['$monthDiff', 0]}," +
+                "        {$ne: ['$auto', true]}" +
+                "      ]" +
+                "    }," +
+                "    '$$KEEP'," +
+                "    '$$PRUNE'" +
+                "  ]" +
+            "}}v",
+            "{ $project: {" +
+                "  _id: 1," +
+                "  interest: {$round: [{ $multiply: [{$add: [" +
+                "    {$sum: '$installments.amountLeftToPay'}," +
+                "    '$interest'" +
+                "    ]}, 0.05]}, 2]}," +
+                "  loanId: 1" +
+            "}}"
+    })
+    List<AccountWithInterest> getAccountsWithInterestToPay();
 }
 
 

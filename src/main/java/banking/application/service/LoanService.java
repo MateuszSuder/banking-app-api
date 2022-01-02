@@ -83,8 +83,9 @@ public class LoanService extends EntryService implements ILoanService {
     }
 
     @Override
-    @Scheduled(cron = "0 0 0 ? * *")
+//    @Scheduled(cron = "0 0 0 ? * *")
     @Transactional
+    @Scheduled(cron = "0 * * ? * *")
     public void loanHandler() {
         List<SiteConfig> siteConfig = this.configRepository.findAll();
 
@@ -112,14 +113,16 @@ public class LoanService extends EntryService implements ILoanService {
                     this.calculateInterest();
                 }
             }
-
+        } else {
+            this.autoPayLoans();
+            this.calculateInterest();
         }
     }
 
     @Override
     @Transactional
-    @Scheduled(cron = "0 * * ? * *")
     public void autoPayLoans() {
+        System.out.println("loan");
         List<AccountAbleToPay> activeLoansAccounts = this.bankAccountRepository.getIDsOfAccountsWithActiveLoan();
         if(activeLoansAccounts.size() == 0) return;
         BulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, BankAccount.class);
@@ -132,9 +135,9 @@ public class LoanService extends EntryService implements ILoanService {
                 Update balanceUpdate = new Update();
                 balanceUpdate.inc("currencies.$.amount", -acc.getToPay());
                 if(acc.getInterest() > 0) {
-                    loanUpdate.set("loans." + loanId + ".interest", 0);
+                    loanUpdate.set("loans." + loanId + ".interest", (double) 0);
                     for(InstallmentsAmountWithId installment : acc.getInstallments()) {
-                        loanUpdate.set("loans." + loanId + ".installments." + installment.getId() + ".amountLeftToPay", 0);
+                        loanUpdate.set("loans." + loanId + ".installments." + installment.getId() + ".amountLeftToPay", (double) 0);
                     }
                 }
                 bulkOperations.updateOne(findAccount, loanUpdate);
@@ -151,11 +154,27 @@ public class LoanService extends EntryService implements ILoanService {
             }
         }
         BulkWriteResult bulkWriteResult = bulkOperations.execute();
+        System.out.println(bulkWriteResult);
     }
 
     @Override
     @Transactional
     public void calculateInterest() {
-
+        System.out.println("interest");
+        List<AccountWithInterest> accountsWithInterest = this.bankAccountRepository.getAccountsWithInterestToPay();
+        if(accountsWithInterest.size() == 0) return;
+        BulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, BankAccount.class);
+        for(AccountWithInterest acc : accountsWithInterest) {
+            Query findAccount = new Query().addCriteria(Criteria.where("_id").is(acc.getId()));
+            Update updateInterest = new Update();
+            updateInterest.inc("loans." + acc.getLoanId() + ".interest", acc.getInterest());
+            updateInterest.push("alertsList", new Alert(
+                    "Delayed payment",
+                    "Interest was applied due to delayed payment"
+            ));
+            bulkOperations.updateOne(findAccount, updateInterest);
+        }
+        BulkWriteResult bulkWriteResult = bulkOperations.execute();
+        System.out.println(bulkWriteResult);
     }
 }
