@@ -1,9 +1,11 @@
 package banking.application.model;
 
+import org.json.JSONObject;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.lang.Nullable;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -29,6 +31,8 @@ public class BankAccount {
     @Nullable // Nullable for every but crypto account
     private CryptoAccountInfo cryptoAccountInfo;
 
+    @Nullable
+    private List<Alert> alertsList;
 
     public BankAccount(String id, List<Currency> currencies) {
         this.id = id;
@@ -61,6 +65,11 @@ public class BankAccount {
 
     public List<Currency> getCurrencies() {
         return currencies;
+    }
+
+    @Nullable
+    public List<Alert> getAlertsList() {
+        return alertsList;
     }
 
     @Override

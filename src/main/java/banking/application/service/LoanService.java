@@ -1,23 +1,22 @@
 package banking.application.service;
 
 import banking.application.exception.ThrowableErrorResponse;
-import banking.application.model.BankAccount;
-import banking.application.model.Installment;
-import banking.application.model.Loan;
+import banking.application.model.*;
 import banking.application.model.input.LoanInput;
 import banking.application.serviceInterface.ILoanService;
+import com.mongodb.bulk.BulkWriteResult;
+import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.util.Pair;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class LoanService extends EntryService implements ILoanService {
@@ -81,5 +80,82 @@ public class LoanService extends EntryService implements ILoanService {
         this.mongoTemplate.updateFirst(query, update, BankAccount.class);
 
         return loan;
+    }
+
+    @Override
+    @Scheduled(cron = "0 0 0 ? * *")
+    @Transactional
+    public void loanHandler() {
+        List<SiteConfig> siteConfig = this.configRepository.findAll();
+
+        if(siteConfig.size() > 0) {
+            Calendar now = Calendar.getInstance();
+            now.setTime(new Date());
+
+            Date lastAutoPay = null;
+            Date lastCalculateInterest = null;
+
+            if((lastAutoPay = siteConfig.get(0).getLastAutoPayLoan()) != null) {
+                Calendar autoPay = Calendar.getInstance();
+                autoPay.setTime(lastAutoPay);
+
+                if(now.get(Calendar.DAY_OF_MONTH) != autoPay.get(Calendar.DAY_OF_MONTH)) {
+                    this.autoPayLoans();
+                }
+            }
+
+            if((lastCalculateInterest = siteConfig.get(0).getLastCalculateInterest()) != null) {
+                Calendar calculateInterest = Calendar.getInstance();
+                calculateInterest.setTime(lastCalculateInterest);
+
+                if(now.get(Calendar.DAY_OF_MONTH) != calculateInterest.get(Calendar.DAY_OF_MONTH)) {
+                    this.calculateInterest();
+                }
+            }
+
+        }
+    }
+
+    @Override
+    @Transactional
+    @Scheduled(cron = "0 * * ? * *")
+    public void autoPayLoans() {
+        List<AccountAbleToPay> activeLoansAccounts = this.bankAccountRepository.getIDsOfAccountsWithActiveLoan();
+        if(activeLoansAccounts.size() == 0) return;
+        BulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, BankAccount.class);
+        for(AccountAbleToPay acc : activeLoansAccounts) {
+            Query findAccount = new Query().addCriteria(Criteria.where("_id").is(acc.getId()));
+            int loanId = acc.getLoanId();
+            if(acc.isAbleToPay()) {
+                Update loanUpdate = new Update();
+                Query findAccountWithPLN = new Query().addCriteria(Criteria.where("_id").is(acc.getId())).addCriteria(Criteria.where("currencies.currency").is("PLN"));
+                Update balanceUpdate = new Update();
+                balanceUpdate.inc("currencies.$.amount", -acc.getToPay());
+                if(acc.getInterest() > 0) {
+                    loanUpdate.set("loans." + loanId + ".interest", 0);
+                    for(InstallmentsAmountWithId installment : acc.getInstallments()) {
+                        loanUpdate.set("loans." + loanId + ".installments." + installment.getId() + ".amountLeftToPay", 0);
+                    }
+                }
+                bulkOperations.updateOne(findAccount, loanUpdate);
+                bulkOperations.updateOne(findAccountWithPLN, balanceUpdate);
+            } else {
+                Update update = new Update().push("alertsList",
+                        new Alert(
+                                "Insufficient funds",
+                                "Your balance is too low to auto-pay loan. Your loan auto-pay is now off."
+                        )
+                );
+                update.set("loans." + loanId + ".autoPayment", false);
+                bulkOperations.updateOne(findAccount, update);
+            }
+        }
+        BulkWriteResult bulkWriteResult = bulkOperations.execute();
+    }
+
+    @Override
+    @Transactional
+    public void calculateInterest() {
+
     }
 }
