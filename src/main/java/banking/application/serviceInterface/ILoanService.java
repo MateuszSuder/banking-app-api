@@ -3,7 +3,6 @@ package banking.application.serviceInterface;
 import banking.application.exception.ThrowableErrorResponse;
 import banking.application.model.Loan;
 import banking.application.model.input.LoanInput;
-import org.springframework.scheduling.annotation.Scheduled;
 
 public interface ILoanService {
     boolean accountHasActiveLoan(String iban);
@@ -11,4 +10,5 @@ public interface ILoanService {
     void loanHandler();
     void autoPayLoans();
     void calculateInterest();
+    void setAutoPayment(String iban, boolean autoPayment) throws ThrowableErrorResponse;
 }

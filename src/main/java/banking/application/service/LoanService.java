@@ -204,4 +204,19 @@ public class LoanService extends EntryService implements ILoanService {
         }
         bulkOperations.execute();
     }
+
+	@Override
+	@Transactional
+	public void setAutoPayment(String iban, boolean autoPayment) throws ThrowableErrorResponse {
+		Optional<Integer> id = this.bankAccountRepository.xd(iban);
+		if(id.isEmpty()) {
+			throw new ThrowableErrorResponse(
+					"No loan found",
+					"No active loan found for iban " + iban,
+					404);
+		}
+		Query query = new Query(Criteria.where("_id").is(iban));
+		Update update = new Update().set("loans." + id.get() + ".autoPayment", autoPayment);
+		this.mongoTemplate.updateFirst(query, update, BankAccount.class);
+	}
 }

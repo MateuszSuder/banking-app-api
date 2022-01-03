@@ -67,8 +67,13 @@ public class LoanController extends Controller {
     }
 
     @Auth
-    @PutMapping("/autoPayment")
-    public ResponseEntity<?> SetAutoPayment() {
+    @PutMapping("/autoPayment/{autoPay}")
+    public ResponseEntity<?> SetAutoPayment(@PathVariable boolean autoPay) {
+        try {
+            this.loanService.setAutoPayment(this.currentUser.getCurrentUser().getUserAccounts().getStandard(), autoPay);
+        } catch (ThrowableErrorResponse e) {
+            return ResponseEntity.status(e.code).body(e.getErrorResponse());
+        }
         return ResponseEntity.ok(null);
     }
 }

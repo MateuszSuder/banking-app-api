@@ -132,6 +132,15 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
             "}}"
     })
     List<AccountWithInterest> getAccountsWithInterestToPay();
+
+    @Aggregation(pipeline = {
+            "{ $match: { _id : '?0' }}",
+            "{ $project: {" +
+                "  _id: 0," +
+                "  loanId: { $indexOfArray: ['$loans', { $last: '$loans' }]}" +
+            "}}"
+    })
+    Optional<Integer> xd(String iban);
 }
 
 
