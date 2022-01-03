@@ -2,21 +2,20 @@ package banking.application.service;
 
 import banking.application.exception.ThrowableErrorResponse;
 import banking.application.model.*;
+import banking.application.model.Currency;
 import banking.application.model.input.LoanInput;
 import banking.application.serviceInterface.ILoanService;
-import com.mongodb.bulk.BulkWriteResult;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import banking.application.util.Currencies;
+import banking.application.util.TransactionType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -144,10 +143,10 @@ public class LoanService extends EntryService implements ILoanService {
     @Override
     @Transactional
     public void autoPayLoans() {
-		System.out.println("LOAN");
 		List<AccountAbleToPay> activeLoansAccounts = this.bankAccountRepository.getIDsOfAccountsWithActiveLoan();
         if(activeLoansAccounts.size() == 0) return;
-        BulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, BankAccount.class);
+        BulkOperations userAccountsOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, BankAccount.class);
+        BulkOperations userTransactionsOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, Transaction.class);
         for(AccountAbleToPay acc : activeLoansAccounts) {
             Query findAccount = new Query().addCriteria(Criteria.where("_id").is(acc.getId()));
             int loanId = acc.getLoanId();
@@ -158,12 +157,20 @@ public class LoanService extends EntryService implements ILoanService {
                 balanceUpdate.inc("currencies.$.amount", -acc.getToPay());
                 if(acc.getInterest() > 0) {
                     loanUpdate.set("loans." + loanId + ".interest", (double) 0);
-                    for(InstallmentsAmountWithId installment : acc.getInstallments()) {
-                        loanUpdate.set("loans." + loanId + ".installments." + installment.getId() + ".amountLeftToPay", (double) 0);
-                    }
                 }
-                bulkOperations.updateOne(findAccount, loanUpdate);
-                bulkOperations.updateOne(findAccountWithPLN, balanceUpdate);
+				for(InstallmentsAmountWithId installment : acc.getInstallments()) {
+					loanUpdate.set("loans." + loanId + ".installments." + installment.getId() + ".amountLeftToPay", (double) 0);
+				}
+				userAccountsOperations.updateOne(findAccount, loanUpdate);
+				userAccountsOperations.updateOne(findAccountWithPLN, balanceUpdate);
+				userTransactionsOperations.insert(
+						new Transaction(
+								acc.getId(),
+								new Recipient(null, "Loan payment"),
+								"Loan payment",
+								new Currency(Currencies.PLN, acc.getToPay()),
+								TransactionType.LOAN_PAYMENT
+						));
             } else {
                 Update update = new Update().push("alertsList",
                         new Alert(
@@ -172,16 +179,16 @@ public class LoanService extends EntryService implements ILoanService {
                         )
                 );
                 update.set("loans." + loanId + ".autoPayment", false);
-                bulkOperations.updateOne(findAccount, update);
+				userAccountsOperations.updateOne(findAccount, update);
             }
         }
-        bulkOperations.execute();
-    }
+		userAccountsOperations.execute();
+		userTransactionsOperations.execute();
+	}
 
     @Override
     @Transactional
     public void calculateInterest() {
-		System.out.println("INTEREST");
 		List<AccountWithInterest> accountsWithInterest = this.bankAccountRepository.getAccountsWithInterestToPay();
         if(accountsWithInterest.size() == 0) return;
         BulkOperations bulkOperations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, BankAccount.class);
