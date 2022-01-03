@@ -3,6 +3,7 @@ package banking.application.repository;
 import banking.application.model.AccountAbleToPay;
 import banking.application.model.AccountWithInterest;
 import banking.application.model.BankAccount;
+import banking.application.model.SingleAccountWithToPay;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -140,7 +141,40 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
                 "  loanId: { $indexOfArray: ['$loans', { $last: '$loans' }]}" +
             "}}"
     })
-    Optional<Integer> xd(String iban);
+    Optional<Integer> getLastLoanId(String iban);
+
+    @Aggregation(pipeline = {
+            "{ $match: { _id : '?0' }}",
+            "{ $unwind: { path: '$currencies' }}",
+            "{ $match: { 'currencies.currency': 'PLN' }}",
+            "{ $project: {" +
+                    "  amount: {" +
+                    "    $let: {" +
+                    "      vars: {" +
+                    "        lastLoan: { $last: '$loans' }" +
+                    "      }," +
+                    "      in: {" +
+                    "        interest: '$$lastLoan.interest'," +
+                    "        installments: '$$lastLoan.installments'" +
+                    "      }" +
+                    "    }" +
+                    "  }," +
+                    "  balance: '$currencies.amount'," +
+                    "  loanId: { $indexOfArray: ['$loans', { $last: '$loans' }]}" +
+                    "}}",
+            "{ $project: {" +
+                    "  _id: 0," +
+                    "  interest: '$amount.interest'," +
+                    "  installments: '$amount.installments'," +
+                    "  balance: 1," +
+                    "  loanId: 1" +
+                    "} }",
+            "{ $project: {" +
+                    "  'installments.paymentDay': 0," +
+                    "  'installments.amount': 0" +
+                    "}}"
+    })
+    SingleAccountWithToPay getSingleAccountWithToPay(String iban);
 }
 
 

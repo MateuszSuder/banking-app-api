@@ -208,7 +208,7 @@ public class LoanService extends EntryService implements ILoanService {
 	@Override
 	@Transactional
 	public void setAutoPayment(String iban, boolean autoPayment) throws ThrowableErrorResponse {
-		Optional<Integer> id = this.bankAccountRepository.xd(iban);
+		Optional<Integer> id = this.bankAccountRepository.getLastLoanId(iban);
 		if(id.isEmpty()) {
 			throw new ThrowableErrorResponse(
 					"No loan found",
@@ -218,5 +218,51 @@ public class LoanService extends EntryService implements ILoanService {
 		Query query = new Query(Criteria.where("_id").is(iban));
 		Update update = new Update().set("loans." + id.get() + ".autoPayment", autoPayment);
 		this.mongoTemplate.updateFirst(query, update, BankAccount.class);
+	}
+
+	@Override
+	@Transactional
+	public double payLoan(String iban, double amount) throws ThrowableErrorResponse {
+		SingleAccountWithToPay acc = this.bankAccountRepository.getSingleAccountWithToPay(iban);
+		if(acc.getBalance() < amount) {
+			throw new ThrowableErrorResponse(
+					"Balance too low",
+					"Account's balance is too low to perform this operation",
+					400
+			);
+		}
+		double amountAvailable = amount;
+
+		Query query = new Query(Criteria.where("_id").is(iban)).addCriteria(Criteria.where("currencies.currency").is("PLN"));
+		Update update = new Update();
+
+		if(acc.getInterest() < amountAvailable) {
+			update.set("loans." + acc.getLoanId() + ".interest", (double)0);
+			amountAvailable -= acc.getInterest();
+		} else {
+			update.inc("loans." + acc.getLoanId() + ".interest", -amountAvailable);
+			update.inc("currencies.$.amount", -amount);
+			this.mongoTemplate.updateFirst(query, update, BankAccount.class);
+			return 0;
+		}
+
+		for(InstallmentsAmountWithId inst : acc.getInstallments()) {
+			if(inst.getAmountLeftToPay() < amountAvailable) {
+				update.set("loans." + acc.getLoanId() + ".installments." + inst.getId() + ".amountLeftToPay", (double)0);
+				amountAvailable -= inst.getAmountLeftToPay();
+			} else {
+				update.inc("loans." + acc.getLoanId() + ".installments." + inst.getId() + ".amountLeftToPay", -amountAvailable);
+				update.inc("currencies.$.amount", -amount);
+				this.mongoTemplate.updateFirst(query, update, BankAccount.class);
+				return 0;
+			}
+		}
+
+		update.inc("currencies.$.amount", -(amount - amountAvailable));
+		this.mongoTemplate.updateFirst(query, update, BankAccount.class);
+
+		BigDecimal roundedAvailable = new BigDecimal(Double.toString(amountAvailable));
+		roundedAvailable = roundedAvailable.setScale(2, RoundingMode.HALF_UP);
+		return roundedAvailable.doubleValue();
 	}
 }

@@ -11,4 +11,5 @@ public interface ILoanService {
     void autoPayLoans();
     void calculateInterest();
     void setAutoPayment(String iban, boolean autoPayment) throws ThrowableErrorResponse;
+    double payLoan(String iban, double amount) throws ThrowableErrorResponse;
 }

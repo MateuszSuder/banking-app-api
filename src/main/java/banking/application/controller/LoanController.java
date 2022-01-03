@@ -4,6 +4,7 @@ import banking.application.annotation.Auth;
 import banking.application.exception.ThrowableErrorResponse;
 import banking.application.model.Loan;
 import banking.application.model.input.LoanInput;
+import banking.application.model.input.PayLoanInput;
 import banking.application.util.AccountType;
 import banking.application.util.ErrorResponse;
 import banking.application.util.LoanConfig;
@@ -62,8 +63,19 @@ public class LoanController extends Controller {
 
     @Auth
     @PutMapping("/pay")
-    public ResponseEntity<?> PayLoan() {
-        return ResponseEntity.ok(null);
+    public ResponseEntity<?> PayLoan(@Valid @RequestBody PayLoanInput payInput) {
+        try {
+            System.out.println(payInput.getAmount());
+            double amountLeft = this.loanService.payLoan(
+                    this.currentUser.getCurrentUser().getUserAccounts().getStandard(),
+                    payInput.getAmount()
+            );
+            HashMap<String, Double> result = new HashMap<>();
+            result.put("amountLeft", amountLeft);
+            return ResponseEntity.ok(result);
+        } catch (ThrowableErrorResponse e) {
+            return ResponseEntity.status(e.code).body(e.getErrorResponse());
+        }
     }
 
     @Auth
