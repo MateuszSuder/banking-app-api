@@ -23,11 +23,20 @@ import java.util.HashMap;
 @RequestMapping("/loan")
 public class LoanController extends Controller {
 
+    /**
+     * Method to get loan values: min/max length, min/max value, rate
+     * @return loan config
+     * @throws IllegalAccessException internal
+     */
     @GetMapping("/info")
     public ResponseEntity<?> GetLoanConfig() throws IllegalAccessException {
+        // Get loanConfig class
         Class<LoanConfig> c = LoanConfig.class;
+        // Get class fields
         Field[] fields = c.getDeclaredFields();
+        // Create hash map for containing config
         HashMap<String, Object> config = new HashMap<>();
+        // Use reflection to get fields and values
         for(Field f : fields) {
             Class<?> type = f.getType();
             if(type == double.class) {
@@ -38,14 +47,22 @@ public class LoanController extends Controller {
                 config.put(f.getName(), f.getLong(null));
             }
         }
+        // Return config
         return ResponseEntity.ok(config);
     }
 
+    /**
+     * Endpoint to take loan
+     * @param loanInput input of loan
+     * @return loan entity or error when no account found (no standard account)
+     */
     @Auth
     @PostMapping("/take")
     public ResponseEntity<?> TakeLoan(@Valid @RequestBody LoanInput loanInput) {
+        // If user has open standard account
         if(this.currentUser.getCurrentUser().getUserAccounts().isOpen(AccountType.standard)) {
             try {
+                // Use service method to take loan
                 Loan loan = this.loanService.takeLoan(this.currentUser.getCurrentUser().getUserAccounts().getStandard(), loanInput);
                 return ResponseEntity.ok(loan);
             } catch (ThrowableErrorResponse e) {
@@ -61,15 +78,21 @@ public class LoanController extends Controller {
         );
     }
 
+    /**
+     * Endpoint to pay account's loan
+     * @param payInput information about payment
+     * @return money left after payment or threw error
+     */
     @Auth
     @PutMapping("/pay")
     public ResponseEntity<?> PayLoan(@Valid @RequestBody PayLoanInput payInput) {
         try {
-            System.out.println(payInput.getAmount());
+            // Use service method
             double amountLeft = this.loanService.payLoan(
                     this.currentUser.getCurrentUser().getUserAccounts().getStandard(),
                     payInput.getAmount()
             );
+            // Map result
             HashMap<String, Double> result = new HashMap<>();
             result.put("amountLeft", amountLeft);
             return ResponseEntity.ok(result);
@@ -78,6 +101,11 @@ public class LoanController extends Controller {
         }
     }
 
+    /**
+     * Endpoint to handle changing value of auto-payment field
+     * @param autoPay true for turning on, false for turning off
+     * @return null or error
+     */
     @Auth
     @PutMapping("/autoPayment/{autoPay}")
     public ResponseEntity<?> SetAutoPayment(@PathVariable boolean autoPay) {
