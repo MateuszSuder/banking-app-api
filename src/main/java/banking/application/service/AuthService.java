@@ -3,12 +3,10 @@ package banking.application.service;
 import banking.application.model.Account;
 import banking.application.model.Code;
 import banking.application.model.Token;
-import banking.application.repository.CodeRepository;
 import banking.application.serviceInterface.IAuthService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**

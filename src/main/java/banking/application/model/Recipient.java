@@ -22,4 +22,9 @@ public class Recipient {
     public String getRecipientName() {
         return recipientName;
     }
+
+    public Recipient(String accountNumber, String recipientName) {
+        this.accountNumber = accountNumber;
+        this.recipientName = recipientName;
+    }
 }

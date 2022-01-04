@@ -30,7 +30,7 @@ public class TransactionController extends Controller {
      */
     @Auth
     @PostMapping("/{accountType}")
-    ResponseEntity getTransactionsPage(@PathVariable AccountType accountType, @Valid @RequestBody(required = true) TransactionPageInput transactionPageInput) {
+    ResponseEntity getTransactionsPage(@PathVariable AccountType accountType, @Valid @RequestBody TransactionPageInput transactionPageInput) {
         try {
             // Get user's account iban
             Account account = this.authService.getAuthAccount(this.currentUser.getCurrentUser().getUser_id());
