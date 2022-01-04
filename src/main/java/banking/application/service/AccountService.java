@@ -30,8 +30,19 @@ public class AccountService extends EntryService implements IAccountService {
         // Create iban
         IBAN iban = new IBAN(ac, user.getUser_id());
 
-        // Create account and assign iban and codes to it. Users will get 10000zł for testing purposes
-        BankAccount account = new BankAccount(iban.getIBAN(), List.of(new Currency(Currencies.PLN, 10000)));
+        BankAccount account = null;
+
+        // Creating BankAccount instance and adding to it balance for testing purposes
+        switch(ac) {
+            case standard:
+                account = new BankAccount(iban.getIBAN(), List.of(new Currency(Currencies.PLN, 10000)));
+                break;
+            case multi:
+                account = new BankAccount(iban.getIBAN(), List.of(new Currency(Currencies.USD, 2500)));
+                break;
+            case crypto:
+                account = new BankAccount(iban.getIBAN(), List.of(new Currency(Currencies.USDT, 2500)));
+        }
 
         // Save account to database
         this.bankAccountRepository.save(account);

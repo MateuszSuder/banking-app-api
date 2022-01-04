@@ -5,5 +5,6 @@ package banking.application.util;
  */
 public enum Currencies {
     PLN,
-    USD
+    USD,
+    USDT
 }
