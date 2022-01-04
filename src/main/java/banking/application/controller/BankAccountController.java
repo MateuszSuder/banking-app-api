@@ -31,9 +31,9 @@ public class BankAccountController extends Controller {
      */
     @Auth
     @PostMapping("open/{accountType}")
-    public ResponseEntity OpenAccount(@PathVariable AccountType accountType) {
+    public ResponseEntity<?> OpenAccount(@PathVariable AccountType accountType) {
         // Reusable object
-        ResponseEntity alreadyOpened = ResponseEntity.status(HttpStatus.CONFLICT)
+        ResponseEntity<?> alreadyOpened = ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(
                         "Conflict",
                         "User has already " + accountType + " account open",
