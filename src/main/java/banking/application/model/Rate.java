@@ -1,10 +1,19 @@
 package banking.application.model;
 
+import banking.application.util.Currencies;
+import org.springframework.lang.Nullable;
+
 /**
  * Class showing Rate model
  */
 public class Rate {
-    String currency;
-    float price;
-    float withdrawFee;
+    Currencies currency;
+    double price;
+    @Nullable
+    Float withdrawFee;
+
+    public Rate(Currencies currency, double price) {
+        this.currency = currency;
+        this.price = price;
+    }
 }
