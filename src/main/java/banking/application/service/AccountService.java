@@ -14,6 +14,8 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -150,5 +152,12 @@ public class AccountService extends EntryService implements IAccountService {
         if(info.isPresent()) return info.get();
         throw new ThrowableErrorResponse("Invalid iban", "Account with IBAN " + IBAN + " not found", 500);
     }
+
+    @Override
+    public Iterable<BankAccount> bankInfoAll(ArrayList<String> iban) {
+        return this.bankAccountRepository.findAllById((iban));
+    }
+
+
 }
 
