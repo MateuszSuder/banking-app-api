@@ -40,6 +40,9 @@ public abstract class Controller {
     protected LoanService loanService;
 
     @Autowired
+    protected RecipientService recipientService;
+
+    @Autowired
     protected CurrentUser currentUser;
 
     // Handlers for specific exceptions

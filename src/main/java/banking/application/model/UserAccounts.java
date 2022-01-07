@@ -47,6 +47,15 @@ public class UserAccounts {
         }
     }
 
+    public String getIban(AccountType accountType) {
+        try {
+            Field field = UserAccounts.class.getDeclaredField(String.valueOf(accountType));
+            return field.get(this).toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     @Override
     public String toString() {
         return "UserAccounts{" +

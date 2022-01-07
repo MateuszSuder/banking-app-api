@@ -1,9 +1,6 @@
 package banking.application.repository;
 
-import banking.application.model.AccountAbleToPay;
-import banking.application.model.AccountWithInterest;
-import banking.application.model.BankAccount;
-import banking.application.model.SingleAccountWithToPay;
+import banking.application.model.*;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -21,7 +18,8 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
     @Query(fields = "{'currencies' : 1, '_id' : 0 }")
     BankAccount findCurrencyById(String id);
 
-
+    @Query("{ _id : ?0, 'savedRecipients.accountNumber': ?1}")
+    Optional<BankAccount> findAccountByIdAndRecipient(String id, String recipientIban);
 
     @Aggregation(pipeline = {
             "{ $match: { _id : '?0' }}",
@@ -175,6 +173,21 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
                     "}}"
     })
     SingleAccountWithToPay getSingleAccountWithToPay(String iban);
+
+    @Aggregation(pipeline = {
+            "{$match: {" +
+                    "  _id: ?0, " +
+                    "  savedRecipients: {$exists: true}" +
+                    "}}",
+            "{$project: {id: 0," +
+                    "   savedRecipients: 1}}",
+            "{$unwind: { path: '$savedRecipients'}}",
+            "{$project: {" +
+                    "  accountNumber: '$savedRecipients.accountNumber'," +
+                    "  recipientName: '$savedRecipients.recipientName'" +
+                    "}}"
+    })
+    List<Recipient> getListOfRecipients(String iban);
 }
 
 
