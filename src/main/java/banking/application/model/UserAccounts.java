@@ -1,9 +1,12 @@
 package banking.application.model;
 
 import banking.application.util.AccountType;
+import banking.application.util.IBAN;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * UserAccounts POJO class
@@ -54,6 +57,20 @@ public class UserAccounts {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public ArrayList<String> getAllIBANs(){
+        ArrayList<String> ibanList = new ArrayList<String>();
+        if(this.isOpen(AccountType.standard)) {
+            ibanList.add(this.getStandard());
+        }
+        if(this.isOpen(AccountType.multi)) {
+            ibanList.add(this.getMulti());
+        }
+        if(this.isOpen(AccountType.crypto)) {
+            ibanList.add(this.getCrypto());
+        }
+        return ibanList;
     }
 
     @Override

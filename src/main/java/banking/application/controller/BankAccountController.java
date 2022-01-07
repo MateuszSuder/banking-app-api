@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -145,5 +146,11 @@ public class BankAccountController extends Controller {
                 "Not found",
                 "Account with type " + accountType + " not found",
                 404));
+    }
+    @Auth
+    @GetMapping("info")
+    public ResponseEntity<?> BankInfoAll() {
+        ArrayList<String> allIBANs = this.currentUser.getCurrentUser().getUserAccounts().getAllIBANs();
+        return ResponseEntity.status(200).body(this.accountService.bankInfoAll(allIBANs));
     }
 }

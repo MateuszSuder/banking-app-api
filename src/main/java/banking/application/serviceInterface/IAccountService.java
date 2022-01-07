@@ -10,6 +10,7 @@ import banking.application.util.Currencies;
 import banking.application.util.IBAN;
 import banking.application.util.TransactionType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public interface IAccountService {
@@ -17,4 +18,5 @@ public interface IAccountService {
     List<Currency> getAccountBalances(String iban, List<Currencies> currencies);
     Currency transferMoney(String from, Recipient to, Currency currency, String title, TransactionType transactionType) throws ThrowableErrorResponse;
     BankAccount bankInfo(String IBAN) throws ThrowableErrorResponse;
+    Iterable<BankAccount> bankInfoAll(ArrayList<String> iban);
 }
