@@ -43,6 +43,9 @@ public abstract class Controller {
     protected RecipientService recipientService;
 
     @Autowired
+    protected RateService rateService;
+
+    @Autowired
     protected CurrentUser currentUser;
 
     // Handlers for specific exceptions

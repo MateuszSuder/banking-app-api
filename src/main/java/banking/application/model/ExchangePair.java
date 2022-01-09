@@ -15,4 +15,8 @@ public class ExchangePair {
 		this.rate = rate;
 		this.defaultCurrency = defaultCurrency;
 	}
+
+	public Rate getRate() {
+		return rate;
+	}
 }

@@ -1,5 +1,6 @@
 package banking.application.serviceInterface;
 
+import banking.application.exception.ThrowableErrorResponse;
 import banking.application.model.Currency;
 import banking.application.model.ExchangeInfo;
 import banking.application.model.ExchangePair;
@@ -10,7 +11,7 @@ import java.util.Collection;
 
 public interface IRateService {
 	Collection<ExchangeRate> getRates();
-	ExchangeRate getRate(Currencies currency);
-	ExchangePair getPair(Currencies defaultCurrency, Currencies currencyToBePaired);
-	ExchangeInfo exchangeInfo(Currency from, Currencies to);
+	ExchangeRate getRate(Currencies currency) throws ThrowableErrorResponse;
+	ExchangePair getPair(Currencies defaultCurrency, Currencies currencyToBePaired) throws ThrowableErrorResponse;
+	ExchangeInfo exchangeInfo(Currency from, Currencies to) throws ThrowableErrorResponse;
 }
