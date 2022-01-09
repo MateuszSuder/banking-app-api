@@ -18,7 +18,7 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
     @Query(fields = "{'currencies' : 1, '_id' : 0 }")
     BankAccount findCurrencyById(String id);
 
-    @Query("{ _id : ?0, 'savedRecipients.accountNumber': ?1}")
+    @Query(value = "{ _id : ?0, 'savedRecipients.accountNumber': ?1}", fields = "{savedRecipients: 1}")
     Optional<BankAccount> findAccountByIdAndRecipient(String id, String recipientIban);
 
     @Aggregation(pipeline = {

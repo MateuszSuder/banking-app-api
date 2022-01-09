@@ -20,15 +20,15 @@ import java.util.Optional;
 public class RecipientService extends EntryService implements IRecipientService {
 
     /**
-     * Method checks if recipient exists for given account
+     * Method finds account with given recipient iban
      * @param iban account's IBAN
      * @param recipientIban recipient's IBAN
-     * @return true if recipient exists, else false
+     * @return bank account if exists else null
      */
     @Override
-    public boolean recipientExists(String iban, String recipientIban) {
+    public BankAccount getBankAccount(String iban, String recipientIban) {
         Optional<BankAccount> bankAccount = this.bankAccountRepository.findAccountByIdAndRecipient(iban, recipientIban);
-        return bankAccount.isPresent();
+        return bankAccount.orElse(null);
     }
 
     /**
@@ -50,7 +50,7 @@ public class RecipientService extends EntryService implements IRecipientService 
      */
     @Override
     public List<Recipient> addRecipient(String iban, Recipient recipient) throws ThrowableErrorResponse {
-        if (recipientExists(iban, recipient.getAccountNumber())) throw new ThrowableErrorResponse(
+        if (getBankAccount(iban, recipient.getAccountNumber()) != null) throw new ThrowableErrorResponse(
                 "Conflict",
                 "Recipient already exists",
                 409);
@@ -71,7 +71,7 @@ public class RecipientService extends EntryService implements IRecipientService 
      */
     @Override
     public List<Recipient> deleteRecipient(String iban, String recipientIban) throws ThrowableErrorResponse {
-        if (!recipientExists(iban, recipientIban)) throw new ThrowableErrorResponse(
+        if (getBankAccount(iban, recipientIban) == null) throw new ThrowableErrorResponse(
                 "Not found",
                 "Recipient doesn't exist",
                 404);
@@ -92,7 +92,7 @@ public class RecipientService extends EntryService implements IRecipientService 
      */
     @Override
     public List<Recipient> modifyRecipient(String iban, Recipient recipient) throws ThrowableErrorResponse {
-        if (!recipientExists(iban, recipient.getAccountNumber())) throw new ThrowableErrorResponse(
+        if (getBankAccount(iban, recipient.getAccountNumber()) == null) throw new ThrowableErrorResponse(
                 "Not found",
                 "Recipient doesn't exists",
                 404);
