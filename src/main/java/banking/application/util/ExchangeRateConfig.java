@@ -4,6 +4,7 @@ import banking.application.model.CurrencyType;
 import banking.application.model.ExchangeRate;
 import banking.application.model.Rate;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -100,5 +101,13 @@ public class ExchangeRateConfig {
 		}
 
 		return this.exchangeRates.get(currency);
+	}
+
+	/**
+	 * Get all rates
+	 * @return saved exchange rates
+	 */
+	public Collection<ExchangeRate> getRates() {
+		return this.exchangeRates.values();
 	}
 }

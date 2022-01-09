@@ -16,4 +16,12 @@ public class Rate {
         this.currency = currency;
         this.price = price;
     }
+
+    public Currencies getCurrency() {
+        return currency;
+    }
+
+    public double getPrice() {
+        return price;
+    }
 }
