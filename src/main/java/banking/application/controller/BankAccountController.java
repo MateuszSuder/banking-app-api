@@ -146,6 +146,10 @@ public class BankAccountController extends Controller {
                 404));
     }
 
+    /**
+     * Returns information about all bank accounts of current ibans
+     * @return requested bank account information
+     */
     @Auth(codeNeeded = true)
     @GetMapping("info")
     public ResponseEntity<?> BankInfoAll() {

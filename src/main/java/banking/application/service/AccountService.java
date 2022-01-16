@@ -159,6 +159,11 @@ public class AccountService extends EntryService implements IAccountService {
         throw new ThrowableErrorResponse("Invalid iban", "Account with IBAN " + IBAN + " not found", 500);
     }
 
+    /**
+     * Returns info of all bank accounts for given IBAN
+     * @param iban requested bank account's IBAN
+     * @return list of bank account info for given IBAN
+     */
     @Override
     public Iterable<BankAccount> bankInfoAll(ArrayList<String> iban) {
         return this.bankAccountRepository.findAllById((iban));
