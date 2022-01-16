@@ -6,5 +6,6 @@ package banking.application.util;
 public enum TransactionType {
     MANUAL,
     STANDING_ORDER,
-    LOAN_PAYMENT
+    LOAN_PAYMENT,
+    EXCHANGE
 }

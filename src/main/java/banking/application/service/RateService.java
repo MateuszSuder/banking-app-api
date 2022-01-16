@@ -5,7 +5,11 @@ import banking.application.model.*;
 import banking.application.serviceInterface.IRateService;
 import banking.application.util.Currencies;
 import banking.application.util.ExchangeRateConfig;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -68,5 +72,35 @@ public class RateService extends EntryService implements IRateService {
 		roundedExchanged = roundedExchanged.setScale(2, RoundingMode.FLOOR);
 		Currency toCurrency = new Currency(to, roundedExchanged.doubleValue());
 		return new ExchangeInfo(from, toCurrency, rate);
+	}
+
+	/**
+	 * Exchange given currency
+	 * @param iban iban of account
+	 * @param newCurrency if currency doesn't exist for account
+	 * @param info exchange info
+	 * @return exchange info
+	 */
+	@Transactional
+	@Override
+	public ExchangeInfo exchange(String iban, boolean newCurrency, ExchangeInfo info) {
+		Query query = new Query(Criteria.where("_id").is(iban)).addCriteria(Criteria.where("currencies.currency").is(info.getFrom().getCurrency()));
+		Update update = new Update().inc("currencies.$.amount", -info.getFrom().getAmount());
+
+		Query query2 = new Query();
+		Update update2 = new Update();
+
+		if(newCurrency) {
+			query2.addCriteria(Criteria.where("_id").is(iban));
+			update2.push("currencies", new Currency(info.getTo().getCurrency(), info.getTo().getAmount()));
+		} else {
+			query2.addCriteria(Criteria.where("_id").is(iban)).addCriteria(Criteria.where("currencies.currency").is(info.getTo().getCurrency()));
+			update2.inc("currencies.$.amount", info.getTo().getAmount());
+		}
+
+		this.mongoTemplate.updateFirst(query, update, BankAccount.class);
+		this.mongoTemplate.updateFirst(query2, update2, BankAccount.class);
+
+		return info;
 	}
 }
