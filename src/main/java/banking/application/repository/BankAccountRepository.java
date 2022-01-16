@@ -210,6 +210,38 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
                     "}}"
     })
     List<StandingOrder> getListOfStandingOrders(String iban);
+
+    @Aggregation(pipeline = {
+            "{$match: {" +
+                    "  'standingOrders': { $exists: true }" +
+                    "}}}",
+            "{$unwind: {" +
+                    "path: '$standingOrders'" +
+                    "}}",
+            "{$project: {" +
+                    "  _id: '$_id'," +
+                    "  standingOrder: '$standingOrders'," +
+                    "  toPayToday: {" +
+                    "    $let: {" +
+                    "      vars: {" +
+                    "        day: {" +
+                    "          $dayOfYear: '$standingOrders.nextPayment'" +
+                    "        }," +
+                    "        today: {" +
+                    "          $dayOfYear: '$$NOW'" +
+                    "        }" +
+                    "      }," +
+                    "      in: {" +
+                    "        $eq: [ '$$day', '$$today' ]" +
+                    "      }" +
+                    "    }" +
+                    "  }" +
+                    "}}",
+            "{$match: {" +
+                    "  toPayToday: true" +
+                    "}}"
+    })
+    List<AccountWithStandingOrderInfo> getAccountsWithToPayToday();
 }
 
 

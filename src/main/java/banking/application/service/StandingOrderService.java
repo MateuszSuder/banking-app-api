@@ -1,16 +1,20 @@
 package banking.application.service;
 
 import banking.application.exception.ThrowableErrorResponse;
-import banking.application.model.BankAccount;
-import banking.application.model.StandingOrder;
+import banking.application.model.*;
 import banking.application.model.input.StandingOrderInput;
 import banking.application.serviceInterface.IStandingOrderService;
 import com.mongodb.client.result.UpdateResult;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -101,5 +105,39 @@ public class StandingOrderService extends EntryService implements IStandingOrder
 					404);
 
 		return this.getListOfStandingOrders(iban);
+	}
+
+	/**
+	 * Get list of accounts with standing order to fill
+	 * @return account id with standing order
+	 */
+	public List<AccountWithStandingOrderInfo> getStandingOrdersToPayToday() {
+		return this.bankAccountRepository.getAccountsWithToPayToday();
+	}
+
+	/**
+	 * Change next payment date and success info
+	 * @param a account with standing order info
+	 * @param filled if success
+	 */
+	public void changeStandingOrderValues(AccountWithStandingOrderInfo a, boolean filled) {
+		Query query = new Query(Criteria.where("_id").is(a.getId())).addCriteria(Criteria.where("standingOrders._id").is(a.getStandingOrder().getId()));
+		Calendar c = Calendar.getInstance();
+		if(filled) {
+			c.add(Calendar.MONTH, 1);
+			Update update = new Update().set("standingOrders.$.nextPayment", c.getTime()).set("standingOrders.$.lastPaymentFailed", false);
+
+			this.mongoTemplate.updateFirst(query, update, BankAccount.class);
+		} else {
+			c.add(Calendar.DAY_OF_MONTH, 1);
+			Update update = new Update()
+					.set("standingOrders.$.nextPayment", c.getTime())
+					.set("standingOrders.$.lastPaymentFailed", true)
+					.push("alertsList", new Alert("Insufficient funds",
+							"Your balance is too low to pay standing order. Payment will be retried tomorrow"
+					));
+
+			this.mongoTemplate.updateFirst(query, update, BankAccount.class);
+		}
 	}
 }
