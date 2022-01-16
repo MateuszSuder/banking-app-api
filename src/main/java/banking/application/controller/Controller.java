@@ -46,6 +46,9 @@ public abstract class Controller {
     protected RateService rateService;
 
     @Autowired
+    protected StandingOrderService standingOrderService;
+
+    @Autowired
     protected CurrentUser currentUser;
 
     // Handlers for specific exceptions
@@ -57,7 +60,7 @@ public abstract class Controller {
             message.add(errorMessage);
         });
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Fields are incorrect", message.toString(), 400));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Fields are incorrect", message, 400));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

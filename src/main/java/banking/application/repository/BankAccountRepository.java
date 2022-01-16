@@ -188,6 +188,28 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
                     "}}"
     })
     List<Recipient> getListOfRecipients(String iban);
+
+    @Aggregation(pipeline = {
+            "{$match: {" +
+                    "  _id: ?0," +
+                    "}}",
+            "{$project: {" +
+                    "  _id: 0," +
+                    "  standingOrders: 1" +
+                    "}}",
+            "{$unwind: {" +
+                    "  path: '$standingOrders'" +
+                    "}}",
+            "{$project: {" +
+                    "  _id: '$standingOrders._id'," +
+                    "  title: '$standingOrders.title'," +
+                    "  to: '$standingOrders.to'," +
+                    "  nextPayment: '$standingOrders.nextPayment'," +
+                    "  lastPaymentFailed: '$standingOrders.lastPaymentFailed'," +
+                    "  value: '$standingOrders.value'" +
+                    "}}"
+    })
+    List<StandingOrder> getListOfStandingOrders(String iban);
 }
 
 
