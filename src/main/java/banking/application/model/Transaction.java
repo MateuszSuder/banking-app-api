@@ -1,5 +1,6 @@
 package banking.application.model;
 
+import banking.application.util.Currencies;
 import banking.application.util.TransactionType;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -41,5 +42,21 @@ public class Transaction {
 
     public Currency getSendValue() {
         return sendValue;
+    }
+
+    public String getAccountNumber() {
+        return receiverInfo.getAccountNumber();
+    }
+    public String getRecipientName() {
+        return receiverInfo.getRecipientName();
+    }
+    public Currencies getCurrency() {
+        return sendValue.getCurrency();
+    }
+    public double getAmount() {
+        return sendValue.getAmount();
+    }
+    public TransactionType getTransactionType() {
+        return transactionType;
     }
 }

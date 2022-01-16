@@ -10,7 +10,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.supercsv.io.CsvBeanWriter;
+import org.supercsv.io.ICsvBeanWriter;
+import org.supercsv.prefs.CsvPreference;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -128,5 +136,40 @@ public class TransactionService extends EntryService implements ITransactionServ
                 transactionPageInput.getPagination().getOffset(),
                 transactionPageInput.getPagination().getLimit(),
                 count));
+    }
+
+    /**
+     * Method that generate list of all transactions of given iban
+     * @param iban account iban
+     * @return list of transaction
+     */
+    public List<Transaction> getAllTransactions(String iban) {
+        Query query = new Query();
+        query.addCriteria(new Criteria().orOperator(Criteria.where("from").is(iban), Criteria.where("receiverInfo.accountNumber").is(iban)));
+
+        return this.mongoTemplate.find(query, Transaction.class);
+    }
+
+    /**
+     * Method that generate all transactions to csv of given iban
+     * @param iban iban of account to get transactions
+     * @param response http response
+     * @throws IOException error creating csv
+     */
+   public void bankStatementToCSV(String iban, HttpServletResponse response ) throws IOException {
+       response.setContentType("text/csv");
+       DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+       String currentDateTime = dateFormatter.format(new Date());
+       String headerKey = "Content-Disposition";
+       String headerValue = "attachment; filename=" + iban + "_" + currentDateTime + ".csv";
+       response.setHeader(headerKey, headerValue);
+       ICsvBeanWriter csvWriter = new CsvBeanWriter(response.getWriter(), CsvPreference.STANDARD_PREFERENCE);
+       String[] csvHeader = {"From", "Receiver Number", "Receiver Name", "Title", "Send currency", "Send Amount", "Transaction type"};
+       String[] nameMapping = {"from", "accountNumber", "recipientName", "title", "currency", "amount", "transactionType"};
+       csvWriter.writeHeader(csvHeader);
+       for(Transaction transaction: getAllTransactions(iban)) {
+           csvWriter.write(transaction,nameMapping);
+       }
+       csvWriter.close();
     }
 }
