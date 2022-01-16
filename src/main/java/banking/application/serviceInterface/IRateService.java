@@ -14,4 +14,5 @@ public interface IRateService {
 	ExchangeRate getRate(Currencies currency) throws ThrowableErrorResponse;
 	ExchangePair getPair(Currencies defaultCurrency, Currencies currencyToBePaired) throws ThrowableErrorResponse;
 	ExchangeInfo exchangeInfo(Currency from, Currencies to) throws ThrowableErrorResponse;
+	ExchangeInfo exchange(String iban, boolean newCurrency, ExchangeInfo info) throws ThrowableErrorResponse;
 }
