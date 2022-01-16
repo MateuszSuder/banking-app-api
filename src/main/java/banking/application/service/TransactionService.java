@@ -137,12 +137,25 @@ public class TransactionService extends EntryService implements ITransactionServ
                 transactionPageInput.getPagination().getLimit(),
                 count));
     }
+
+    /**
+     * Method that generate list of all transactions of given iban
+     * @param iban account iban
+     * @return list of transaction
+     */
     public List<Transaction> getAllTransactions(String iban) {
         Query query = new Query();
         query.addCriteria(new Criteria().orOperator(Criteria.where("from").is(iban), Criteria.where("receiverInfo.accountNumber").is(iban)));
 
         return this.mongoTemplate.find(query, Transaction.class);
     }
+
+    /**
+     * Method that generate all transactions to csv of given iban
+     * @param iban iban of account to get transactions
+     * @param response http response
+     * @throws IOException error creating csv
+     */
    public void bankStatementToCSV(String iban, HttpServletResponse response ) throws IOException {
        response.setContentType("text/csv");
        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");

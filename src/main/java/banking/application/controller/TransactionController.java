@@ -57,6 +57,13 @@ public class TransactionController extends Controller {
             return ResponseEntity.status(e.code).body(e.getErrorResponse());
         }
     }
+
+    /**
+     * Return generated csv file
+     * @param accountType type of account
+     * @param response http response
+     * @return generated csv file
+     */
     @Auth
     @GetMapping("/{accountType}/export")
     ResponseEntity BankStatementToCSV(@PathVariable AccountType accountType, HttpServletResponse response)  {
