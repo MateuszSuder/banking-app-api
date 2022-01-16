@@ -145,6 +145,11 @@ public class BankAccountController extends Controller {
                 "Account with type " + accountType + " not found",
                 404));
     }
+
+    /**
+     * Returns information about all bank accounts of current ibans
+     * @return requested bank account information
+     */
     @Auth
     @GetMapping("info")
     public ResponseEntity<?> BankInfoAll() {
