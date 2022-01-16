@@ -32,7 +32,7 @@ public class StandingOrderController extends Controller {
 	 * @param accountType account type from which to delete
 	 * @return list of account's standing orders
 	 */
-	@Auth
+	@Auth(codeNeeded = true)
 	@PostMapping("/{accountType}")
 	ResponseEntity<?> AddStandingOrder(@PathVariable AccountType accountType, @Valid @RequestBody StandingOrderInput standingOrderInput) {
 		String iban = this.currentUser.getCurrentUser().getUserAccounts().getIban(accountType);
@@ -49,7 +49,7 @@ public class StandingOrderController extends Controller {
 	 * @param id id of standing order to delete
 	 * @return list of account's standing orders
 	 */
-	@Auth
+	@Auth(codeNeeded = true)
 	@DeleteMapping("/{accountType}/{id}")
 	ResponseEntity<?> DeleteStandingOrder(@PathVariable AccountType accountType, @PathVariable String id) {
 		String iban = this.currentUser.getCurrentUser().getUserAccounts().getIban(accountType);
@@ -67,7 +67,7 @@ public class StandingOrderController extends Controller {
 	 * @param standingOrderInput modify input
 	 * @return list of account's standing orders
 	 */
-	@Auth
+	@Auth(codeNeeded = true)
 	@PutMapping("/{accountType}/{id}")
 	ResponseEntity<?> ModifyStandingOrder(@PathVariable AccountType accountType, @PathVariable String id, @Valid @RequestBody StandingOrderInput standingOrderInput) {
 		String iban = this.currentUser.getCurrentUser().getUserAccounts().getIban(accountType);

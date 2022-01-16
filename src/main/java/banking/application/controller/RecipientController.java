@@ -28,7 +28,7 @@ public class RecipientController extends Controller {
      * @param recipient recipient input
      * @return current list of recipients of given account
      */
-    @Auth
+    @Auth(codeNeeded = true)
     @PostMapping("/{accountType}")
     ResponseEntity<?> AddRecipient(@PathVariable AccountType accountType, @Valid @RequestBody Recipient recipient) {
         String iban = this.currentUser.getCurrentUser().getUserAccounts().getIban(accountType);
@@ -50,7 +50,7 @@ public class RecipientController extends Controller {
      * @param recipientIban recipient iban
      * @return current list of recipients of given account
      */
-    @Auth
+    @Auth(codeNeeded = true)
     @DeleteMapping("/{accountType}")
     ResponseEntity<?> DeleteRecipient(@PathVariable AccountType accountType, @RequestParam String recipientIban) {
         String iban = this.currentUser.getCurrentUser().getUserAccounts().getIban(accountType);
@@ -68,7 +68,7 @@ public class RecipientController extends Controller {
      * @param recipient recipient input
      * @return current list of recipients of given account
      */
-    @Auth
+    @Auth(codeNeeded = true)
     @PutMapping("/{accountType}")
     ResponseEntity<?> ModifyRecipient(@PathVariable AccountType accountType, @Valid @RequestBody Recipient recipient) {
         String iban = this.currentUser.getCurrentUser().getUserAccounts().getIban(accountType);

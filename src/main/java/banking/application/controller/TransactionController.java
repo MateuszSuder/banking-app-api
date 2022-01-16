@@ -13,17 +13,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.supercsv.io.CsvBeanWriter;
-import org.supercsv.io.ICsvBeanWriter;
-import org.supercsv.prefs.CsvPreference;
 
-import javax.management.Query;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Controller handling request for transactions data
@@ -37,7 +30,7 @@ public class TransactionController extends Controller {
      * @param transactionPageInput transaction filters
      * @return Transaction page and pagination
      */
-    @Auth
+    @Auth(codeNeeded = true)
     @PostMapping("/{accountType}")
     ResponseEntity getTransactionsPage(@PathVariable AccountType accountType, @Valid @RequestBody TransactionPageInput transactionPageInput) {
         try {
@@ -64,7 +57,7 @@ public class TransactionController extends Controller {
      * @param response http response
      * @return generated csv file
      */
-    @Auth
+    @Auth(codeNeeded = true)
     @GetMapping("/{accountType}/export")
     ResponseEntity BankStatementToCSV(@PathVariable AccountType accountType, HttpServletResponse response)  {
         String iban = this.currentUser.getCurrentUser().getUserAccounts().getIban(accountType);
