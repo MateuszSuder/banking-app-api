@@ -40,7 +40,13 @@ public class AccountService extends EntryService implements IAccountService {
                 account = new BankAccount(iban.getIBAN(), List.of(new Currency(Currencies.PLN, 10000)));
                 break;
             case multi:
-                account = new BankAccount(iban.getIBAN(), List.of(new Currency(Currencies.USD, 2500)));
+                account = new BankAccount(iban.getIBAN(), List.of(
+                        new Currency(Currencies.PLN, 2500),
+                        new Currency(Currencies.USD, 2500),
+                        new Currency(Currencies.CHF, 2500),
+                        new Currency(Currencies.EUR, 2500),
+                        new Currency(Currencies.JPY, 2500),
+                        new Currency(Currencies.GBP, 2500)));
                 break;
             case crypto:
                 account = new BankAccount(iban.getIBAN(), List.of(new Currency(Currencies.USDT, 2500)));

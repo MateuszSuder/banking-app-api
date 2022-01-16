@@ -86,14 +86,12 @@ public class BankAccountController extends Controller {
     @Auth(codeNeeded = false)
     @PostMapping("transfer/{accountType}")
     public ResponseEntity TransferMoney(@PathVariable AccountType accountType, @Valid @RequestBody TransferInput transferInput) {
-        // todo change when adding transfers between other types
-        if(accountType != AccountType.standard) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Only standard accounts", "", 400));
 
         Currency balance = null;
 
         try {
             balance = this.accountService.transferMoney(
-                    this.currentUser.getCurrentUser().getUserAccounts().getStandard(),
+                    this.currentUser.getCurrentUser().getUserAccounts().getIban(accountType),
                     transferInput.getTo(),
                     transferInput.getValue(),
                     transferInput.getTitle(),
