@@ -188,6 +188,60 @@ public interface BankAccountRepository extends MongoRepository<BankAccount, Stri
                     "}}"
     })
     List<Recipient> getListOfRecipients(String iban);
+
+    @Aggregation(pipeline = {
+            "{$match: {" +
+                    "  _id: ?0," +
+                    "}}",
+            "{$project: {" +
+                    "  _id: 0," +
+                    "  standingOrders: 1" +
+                    "}}",
+            "{$unwind: {" +
+                    "  path: '$standingOrders'" +
+                    "}}",
+            "{$project: {" +
+                    "  _id: '$standingOrders._id'," +
+                    "  title: '$standingOrders.title'," +
+                    "  to: '$standingOrders.to'," +
+                    "  nextPayment: '$standingOrders.nextPayment'," +
+                    "  lastPaymentFailed: '$standingOrders.lastPaymentFailed'," +
+                    "  value: '$standingOrders.value'" +
+                    "}}"
+    })
+    List<StandingOrder> getListOfStandingOrders(String iban);
+
+    @Aggregation(pipeline = {
+            "{$match: {" +
+                    "  'standingOrders': { $exists: true }" +
+                    "}}}",
+            "{$unwind: {" +
+                    "path: '$standingOrders'" +
+                    "}}",
+            "{$project: {" +
+                    "  _id: '$_id'," +
+                    "  standingOrder: '$standingOrders'," +
+                    "  toPayToday: {" +
+                    "    $let: {" +
+                    "      vars: {" +
+                    "        day: {" +
+                    "          $dayOfYear: '$standingOrders.nextPayment'" +
+                    "        }," +
+                    "        today: {" +
+                    "          $dayOfYear: '$$NOW'" +
+                    "        }" +
+                    "      }," +
+                    "      in: {" +
+                    "        $eq: [ '$$day', '$$today' ]" +
+                    "      }" +
+                    "    }" +
+                    "  }" +
+                    "}}",
+            "{$match: {" +
+                    "  toPayToday: true" +
+                    "}}"
+    })
+    List<AccountWithStandingOrderInfo> getAccountsWithToPayToday();
 }
 
 
