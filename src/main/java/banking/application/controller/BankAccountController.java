@@ -109,7 +109,7 @@ public class BankAccountController extends Controller {
      * @param accountType type of account to get info of
      * @return requested bank account information
      */
-    @Auth(codeNeeded = true)
+    @Auth
     @GetMapping("info/{accountType}")
     public ResponseEntity BankAccountInfo(@PathVariable AccountType accountType) {
         UserAccounts userAccounts = this.currentUser.getCurrentUser().getUserAccounts();
@@ -150,7 +150,7 @@ public class BankAccountController extends Controller {
      * Returns information about all bank accounts of current ibans
      * @return requested bank account information
      */
-    @Auth(codeNeeded = true)
+    @Auth
     @GetMapping("info")
     public ResponseEntity<?> BankInfoAll() {
         ArrayList<String> allIBANs = this.currentUser.getCurrentUser().getUserAccounts().getAllIBANs();
