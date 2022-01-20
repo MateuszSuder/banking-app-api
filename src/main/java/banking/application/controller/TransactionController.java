@@ -30,7 +30,7 @@ public class TransactionController extends Controller {
      * @param transactionPageInput transaction filters
      * @return Transaction page and pagination
      */
-    @Auth(codeNeeded = true)
+    @Auth
     @PostMapping("/{accountType}")
     ResponseEntity getTransactionsPage(@PathVariable AccountType accountType, @Valid @RequestBody TransactionPageInput transactionPageInput) {
         try {
