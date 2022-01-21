@@ -194,7 +194,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             User u = objectMapper.readValue(json.get(dotenv.get("APP_JWT_NAMESPACE") + "user").toString(), User.class);
 
             // If authorization needed and code is not authentic discontinue request
-//            if(annotation.codeNeeded() && !this.isCodeAuthentic(u.getUser_id(), request, response)) return false;
+            if(annotation.codeNeeded() && !this.isCodeAuthentic(u.getUser_id(), request, response)) return false;
             try {
                 UserAccounts ua = objectMapper.readValue(json.get(dotenv.get("APP_JWT_NAMESPACE") + "metadata").toString(), UserAccounts.class);
                 u.setUserAccounts(ua);
