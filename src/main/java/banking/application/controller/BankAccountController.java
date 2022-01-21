@@ -30,7 +30,7 @@ public class BankAccountController extends Controller {
      * @param accountType which account to open
      * @return Account's iban or error
      */
-    @Auth
+    @Auth(codeNeeded = true)
     @PostMapping("open/{accountType}")
     public ResponseEntity<?> OpenAccount(@PathVariable AccountType accountType) {
         // Reusable object
@@ -83,7 +83,7 @@ public class BankAccountController extends Controller {
      * @param accountType type of account to send from
      * @return balance after transfer if success else error
      */
-    @Auth(codeNeeded = false)
+    @Auth(codeNeeded = true)
     @PostMapping("transfer/{accountType}")
     public ResponseEntity TransferMoney(@PathVariable AccountType accountType, @Valid @RequestBody TransferInput transferInput) {
 
@@ -145,6 +145,11 @@ public class BankAccountController extends Controller {
                 "Account with type " + accountType + " not found",
                 404));
     }
+
+    /**
+     * Returns information about all bank accounts of current ibans
+     * @return requested bank account information
+     */
     @Auth
     @GetMapping("info")
     public ResponseEntity<?> BankInfoAll() {

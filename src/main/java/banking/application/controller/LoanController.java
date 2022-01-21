@@ -56,7 +56,7 @@ public class LoanController extends Controller {
      * @param loanInput input of loan
      * @return loan entity or error when no account found (no standard account)
      */
-    @Auth
+    @Auth(codeNeeded = true)
     @PostMapping("/take")
     public ResponseEntity<?> TakeLoan(@Valid @RequestBody LoanInput loanInput) {
         // If user has open standard account
@@ -83,7 +83,7 @@ public class LoanController extends Controller {
      * @param payInput information about payment
      * @return money left after payment or threw error
      */
-    @Auth
+    @Auth(codeNeeded = true)
     @PutMapping("/pay")
     public ResponseEntity<?> PayLoan(@Valid @RequestBody PayLoanInput payInput) {
         try {
@@ -106,7 +106,7 @@ public class LoanController extends Controller {
      * @param autoPay true for turning on, false for turning off
      * @return null or error
      */
-    @Auth
+    @Auth(codeNeeded = true)
     @PutMapping("/autoPayment/{autoPay}")
     public ResponseEntity<?> SetAutoPayment(@PathVariable boolean autoPay) {
         try {

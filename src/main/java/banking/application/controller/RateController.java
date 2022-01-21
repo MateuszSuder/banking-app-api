@@ -49,7 +49,7 @@ public class RateController extends Controller {
 	 * @param exchangeInput exchange input
 	 * @return Exchange info
 	 */
-	@Auth
+	@Auth(codeNeeded = true)
 	@PostMapping("")
 	public ResponseEntity<?> Exchange(@Valid @RequestBody ExchangeInput exchangeInput) {
 		String iban = this.currentUser.getCurrentUser().getUserAccounts().getMulti();
