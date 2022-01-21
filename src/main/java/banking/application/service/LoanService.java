@@ -110,9 +110,10 @@ public class LoanService extends EntryService implements ILoanService {
 
 		// Find and account and add loan instance to it
         Query query = new Query();
-        query.addCriteria(Criteria.where("_id").is(iban));
+        query.addCriteria(Criteria.where("_id").is(iban)).addCriteria(Criteria.where("currencies.currency").is("PLN"));
         Update update = new Update();
         update.push("loans", loan);
+		update.inc("currencies.$.amount", loanInput.getLoanAmount());
 
         this.mongoTemplate.updateFirst(query, update, BankAccount.class);
 
